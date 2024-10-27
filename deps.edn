@@ -1,0 +1,2 @@
+{:paths ["src"]
+ :deps {org.apache.pdfbox/pdfbox {:mvn/version "3.0.3"}}}
