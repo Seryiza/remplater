@@ -10,6 +10,9 @@
     [org.apache.pdfbox.pdmodel.graphics.color PDPattern PDColor PDDeviceRGB]
     [org.apache.pdfbox.pdmodel.common PDRectangle]
     [org.apache.pdfbox.pdmodel.font PDFont PDType1Font Standard14Fonts$FontName]
+    [org.apache.pdfbox.pdmodel.interactive.annotation PDAnnotationLink]
+    [org.apache.pdfbox.pdmodel.interactive.action PDActionGoTo]
+    [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
 
 (defn rect [cs {:keys [fill? stroke? fill-color line-width
@@ -18,7 +21,8 @@
                      stroke? false
                      line-width 1.0}
                 :as fig-opts}]
-  (let [width (abs (- x2 x1))
+  (let [;; TODO: add fig-opts->pdrect fn
+        width (abs (- x2 x1))
         height (abs (- y2 y1))
         fill-color (or fill-color
                      (pdf/make-color-by-fig-position fig-opts))]
@@ -49,5 +53,21 @@
     (.newLineAtOffset cs x1 (- y2 font-size))
     (.showText cs text)
     (.endText cs)))
+
+;; TODO: add link-type to change PDPageFitWidthDestination
+(defn page-link [{:keys [page cs]}
+                 {:keys [target-page x1 y1 x2 y2] :as fig-opts}]
+  (let [annotations (.getAnnotations page)
+        annotation-link (PDAnnotationLink.)
+        width (abs (- x2 x1))
+        height (abs (- y2 y1))
+        rect (PDRectangle. x1 y1 width height)
+        go-to-action (PDActionGoTo.)
+        destination (PDPageFitWidthDestination.)]
+    (.setRectangle annotation-link rect)
+    (.setPage destination target-page)
+    (.setDestination go-to-action destination)
+    (.setAction annotation-link go-to-action)
+    (.add annotations annotation-link)))
 
 (comment)

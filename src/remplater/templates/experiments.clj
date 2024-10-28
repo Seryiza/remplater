@@ -1,10 +1,10 @@
-(ns remplater.templates.simple-planner
+(ns remplater.templates.experiments
   (:require
     [remplater.components :as c]
     [remplater.fig-operations :as fo]
     [remplater.pdf :as pdf]))
 
-(defn- calendar-page [pcs fig-opts]
+(defn- calendar-page [document page pcs fig-opts]
   (let [[sidebar-fig content-fig]
         (fo/split fig-opts :x [104])
 
@@ -18,6 +18,12 @@
             empty-fig]
       (map #(c/rect pcs %))
       (doall))
+
+    (fo/grid (-> empty-fig
+               (assoc :rows 4 :cols 3)
+               (fo/add-margin 50))
+      (fn [fig-opts]
+        (c/rect pcs fig-opts)))
 
     (fo/grid (-> calendar-fig
                (assoc :rows 5 :cols 7)
@@ -34,16 +40,28 @@
               text-opts (-> fig-opts
                           (assoc :font-size 35)
                           (assoc :text day)
-                          (fo/add-margin 5 12))]
+                          (fo/add-margin 5 12))
+              link-opts (-> fig-opts
+                          (assoc :target-page (pdf/get-document-page document 1)))]
           (c/rect pcs rect-opts)
-          (c/text pcs text-opts))))))
+          (c/text pcs text-opts)
+          (c/page-link {:page page :cs pcs} link-opts))))))
 
 (defn simple-planner [document page pcs]
   (let [fig-opts (-> page
                    (pdf/page->pdrect)
                    (pdf/pdrect->fig-opts))]
-    (calendar-page pcs fig-opts)))
+    (calendar-page document page pcs fig-opts)))
 
 (comment
-  (pdf/in-single-page-content "/tmp/blank.pdf"
-    simple-planner))
+  (pdf/with-document "/tmp/blank.pdf"
+    (fn [doc]
+      (let [page-1 (pdf/make-page doc)
+            page-2 (pdf/make-page doc)]
+
+        (pdf/with-page-content-stream doc page-1
+          (fn [cs]
+            (simple-planner doc page-1 cs)))
+
+        (pdf/with-page-content-stream doc page-2
+          (fn [cs]))))))

@@ -1,7 +1,4 @@
-(ns remplater.fig-operations
-  (:require
-    [remplater.components :as c]
-    [remplater.pdf :as pdf]))
+(ns remplater.fig-operations)
 
 (defn split-one [fig-opts coordinate split-size]
   (comment
@@ -65,15 +62,3 @@
     (->> cells
       (map #(f %))
       (doall))))
-
-(comment
-  (pdf/in-single-page-content "/tmp/blank.pdf"
-    (fn [_ _ pcs]
-      (grid {:x1 100 :y1 100 :x2 200 :y2 200
-             :rows 4 :cols 4}
-        (fn [{:keys [index x1 y1 x2 y2] :as fig-opts}]
-          (let [c (* index 10)
-                rect-opts
-                (-> fig-opts
-                  (assoc :fill-color (pdf/make-color c c c)))]
-            (c/rect pcs rect-opts)))))))

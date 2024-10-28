@@ -15,22 +15,38 @@
 (defn save-document [^PDDocument document output-path]
   (.save document output-path))
 
-;; TODO: maybe add (.setResources page (PDResources.))
-(defn make-page []
-  (PDPage. remarkable-2-page-size))
+(defn get-document-page [^PDDocument document page-index]
+  (.getPage document page-index))
 
 (defn add-page-to-document [document page]
   (.addPage document page))
 
-(defn with-page-content [document page f]
-  (with-open [pcs (PDPageContentStream. document page PDPageContentStream$AppendMode/APPEND false)]
-    (f document page pcs)))
+(defn make-page [& [document]]
+  (let [page (PDPage. remarkable-2-page-size)]
+    (.setResources page (PDResources.))
+    (when document
+      (add-page-to-document document page))
+    page))
 
+(defn with-document [output-path f]
+  (with-open [document (make-document)]
+    (f document)
+    (save-document document output-path)))
+
+(defn with-page [document f]
+  (let [page (make-page document)]
+    (f page)))
+
+(defn with-page-content-stream [document page f]
+  (with-open [pcs (PDPageContentStream. document page PDPageContentStream$AppendMode/APPEND false)]
+    (f pcs)))
+
+;; TODO: deprecated?
 (defn in-single-page-content [output-path f]
   (let [document (make-document)
         page (make-page)]
     (add-page-to-document document page)
-    (with-page-content document page f)
+    (with-page-content-stream document page f)
     (save-document document output-path)))
 
 (defn page->pdrect [page]
