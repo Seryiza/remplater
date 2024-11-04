@@ -31,16 +31,18 @@
   (comment
     (split {:x1 100 :y1 100 :x2 200 :y2 200} :y [10 20]))
 
-  (->> splits
-    (reduce (fn [all next-split]
-              (let [splitted-pair (split-one
-                                    (last all)
-                                    coordinate
-                                    next-split)]
-                (-> all
-                  (drop-last)
-                  (concat splitted-pair))))
-      [fig-opts])))
+  (let [fig-opts (select-keys fig-opts [:x1 :y1 :x2 :y2])]
+    (->> splits
+      (reduce (fn [all next-split]
+                (let [splitted-pair (split-one
+                                      (last all)
+                                      coordinate
+                                      next-split)]
+                  (-> all
+                    (drop-last)
+                    (concat splitted-pair))))
+        [fig-opts])
+      (vec))))
 
 (defn add-margin
   ([fig-opts margin]
@@ -54,7 +56,8 @@
      (update :x1 + margin-left)
      (update :x2 - margin-right)
      (update :y1 + margin-bottom)
-     (update :y2 - margin-top))))
+     (update :y2 - margin-top)
+     (select-keys [:x1 :x2 :y1 :y2]))))
 
 (defn grid [fig-opts f]
   (let [{:keys [x1 y1 x2 y2 rows cols]} fig-opts

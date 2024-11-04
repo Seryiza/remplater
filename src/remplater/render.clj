@@ -5,6 +5,9 @@
     [remplater.fig-operations :as fo]
     [remplater.pdf :as pdf]))
 
+(def allowed-inherent-opts
+  #{:document :page :cs :x1 :x2 :y1 :y2})
+
 (defn render-tree [tree]
   (->> tree
     (walk/prewalk
@@ -15,12 +18,13 @@
               (fn? (first node)))
             (let [f (first node)
                   [fig-opts & children] (rest node)
-                  next-children (apply f fig-opts children)]
+                  next-children (apply f fig-opts children)
+                  inherent-opts (select-keys fig-opts allowed-inherent-opts)]
               (into [f fig-opts]
                 (->> next-children
                   (mapv (fn [next-child]
                           (-> next-child
-                            (update 1 #(merge fig-opts %))))))))
+                            (update 1 #(merge inherent-opts %))))))))
 
             :else
             node))))))
@@ -40,7 +44,10 @@
     (let [{:keys [output]} (second document-tree)
           page-trees (->> (drop 2 document-tree)
                        (mapv (fn [page-tree]
-                               (let [page-obj (pdf/make-page document)]
+                               (let [page-size (get-in page-tree [1 :size])
+                                     page-obj (pdf/make-page
+                                                {:document document
+                                                 :size page-size})]
                                  (-> page-tree
                                    (assoc-in [1 :document] document)
                                    (assoc-in [1 :page] page-obj)
@@ -75,7 +82,7 @@
 
   (pdf/with-document "/tmp/blank.pdf"
     (fn [doc]
-      (let [page-1 (pdf/make-page doc)]
+      (let [page-1 (pdf/make-page {:document doc})]
         (pdf/with-page-content-stream doc page-1
           (fn [cs]
             (render-tree

@@ -15,8 +15,8 @@
     [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
 
-(defn assoc-fig-opts [component fig-opts]
-  (update component 1 #(merge % fig-opts)))
+(defn merge-fig-opts [component & fig-opts]
+  (update component 1 #(apply merge (concat fig-opts [%]))))
 
 (defn document [fig-opts & children]
   children)
@@ -66,12 +66,30 @@
     (.endText cs))
   children)
 
+(defn margin [fig-opts & children]
+  (let [mleft (or (:margin-left fig-opts) (:margin fig-opts) 0)
+        mtop (or (:margin-top fig-opts) (:margin fig-opts) 0)
+        mright (or (:margin-right fig-opts) (:margin fig-opts) 0)
+        mbottom (or (:margin-bottom fig-opts) (:margin fig-opts) 0)
+        new-fig-opts (fo/add-margin fig-opts mleft mtop mright mbottom)]
+    (->> children
+      (mapv #(merge-fig-opts % new-fig-opts)))))
+
+(defn split [fig-opts & children]
+  (let [split-points (fo/split fig-opts
+                       (:direction fig-opts)
+                       (:splits fig-opts))]
+    (->> children
+      (map-indexed
+        (fn [index child]
+          (merge-fig-opts child (get split-points index))))
+      (vec))))
+
 (defn grid [fig-opts & children]
   (fo/grid fig-opts
     (fn [cell-fig-opts]
       (->> children
-        (mapv (fn [child]
-                (update child 1 #(merge % cell-fig-opts))))))))
+        (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defn page-link [{:keys [page cs]}

@@ -31,8 +31,8 @@
 (comment
   (pdf/with-document "/tmp/blank.pdf"
     (fn [doc]
-      (let [page-1 (pdf/make-page doc)
-            page-2 (pdf/make-page doc)]
+      (let [page-1 (pdf/make-page {:document doc})
+            page-2 (pdf/make-page {:document doc})]
 
         (pdf/with-page-content-stream doc page-1
           (fn [cs]
