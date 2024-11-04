@@ -15,18 +15,12 @@
     [c/margin {:margin 50}
      [c/split {:direction :y :splits [200]}
       [c/margin {:margin-bottom 20}
-       ;; TODO
-       [c/split {:direction :x :splits [253] #_[#(/ % 7)]}
+       [c/split {:direction :x :splits [#(/ % 7)]}
         [c/rect {:fill? false
                  :stroke? true
                  :line-width 4}]]]
 
       [c/grid {:rows 5 :cols 7}
-       ;; TODO: fix it
-       #_[c/rect {:fill? false
-                  :stroke? true
-                  :line-width 4}]
-
        [(fn [fig-opts]
           [[c/rect {:fill? false
                     :stroke? true

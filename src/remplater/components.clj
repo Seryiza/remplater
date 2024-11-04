@@ -86,10 +86,11 @@
       (vec))))
 
 (defn grid [fig-opts & children]
-  (fo/grid fig-opts
-    (fn [cell-fig-opts]
-      (->> children
-        (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))
+  (let [cells-fig-opts (fo/grid fig-opts)]
+    (->> cells-fig-opts
+      (mapcat (fn [cell-fig-opts]
+                (->> children
+                  (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defn page-link [{:keys [page cs]}

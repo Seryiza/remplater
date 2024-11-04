@@ -9,25 +9,11 @@
   #{:document :page :cs :x1 :x2 :y1 :y2})
 
 (defn render-tree [tree]
-  (->> tree
-    (walk/prewalk
-      (fn [node]
-        (let []
-          (cond
-            (and (vector? node)
-              (fn? (first node)))
-            (let [f (first node)
-                  [fig-opts & children] (rest node)
-                  next-children (apply f fig-opts children)
-                  inherent-opts (select-keys fig-opts allowed-inherent-opts)]
-              (into [f fig-opts]
-                (->> next-children
-                  (mapv (fn [next-child]
-                          (-> next-child
-                            (update 1 #(merge inherent-opts %))))))))
-
-            :else
-            node))))))
+  (let [[component fig-opts & children] tree
+        next-children (apply component fig-opts children)
+        inherent-opts (select-keys fig-opts allowed-inherent-opts)]
+    (doseq [child next-children]
+      (render-tree (update child 1 #(merge inherent-opts %))))))
 
 (defn render-page [page-tree]
   (let [page-component (first page-tree)
@@ -78,6 +64,15 @@
        [(fn [fig-opts]
           [[c/rect fig-opts]
            [c/text {:text (str (:index fig-opts))
+                    :font-size 30}]])]]]])
+
+  (render-document
+    [c/document {:output "/tmp/blank.pdf"}
+     [c/page {}
+      [c/grid {:rows 3 :cols 3}
+       [c/rect {}]
+       [(fn [fig-opts]
+          [[c/text {:text (str (:index fig-opts))
                     :font-size 30}]])]]]])
 
   (pdf/with-document "/tmp/blank.pdf"

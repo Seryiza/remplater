@@ -59,7 +59,7 @@
      (update :y2 - margin-top)
      (select-keys [:x1 :x2 :y1 :y2]))))
 
-(defn grid [fig-opts f]
+(defn grid [fig-opts]
   (let [{:keys [x1 y1 x2 y2 rows cols]} fig-opts
         x-delta (/ (- x2 x1) cols)
         y-delta (/ (- y2 y1) rows)
@@ -69,5 +69,4 @@
                 (map #(split % :x x-slices))
                 (flatten)
                 (map-indexed #(assoc %2 :index %1)))]
-    (->> cells
-      (mapv #(f %)))))
+    cells))
