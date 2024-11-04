@@ -15,12 +15,22 @@
     [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
 
-(defn rect [cs {:keys [fill? stroke? fill-color line-width
-                       x1 y1 x2 y2]
-                :or {fill? true
-                     stroke? false
-                     line-width 1.0}
-                :as fig-opts}]
+(defn assoc-fig-opts [component fig-opts]
+  (update component 1 #(merge % fig-opts)))
+
+(defn document [fig-opts & children]
+  children)
+
+(defn page [{:as fig-opts :keys [document page]} & children]
+  children)
+
+(defn rect [{:keys [fill? stroke? fill-color line-width
+                    cs x1 y1 x2 y2]
+             :or {fill? true
+                  stroke? false
+                  line-width 1.0}
+             :as fig-opts}
+            & children]
   (let [;; TODO: add fig-opts->pdrect fn
         width (abs (- x2 x1))
         height (abs (- y2 y1))
@@ -44,15 +54,24 @@
 
         (.closePath cs)))))
 
-(defn text [cs {:keys [x1 y1 x2 y2 text font font-size]
-                :or {font-size 12}}]
+(defn text [{:keys [cs x1 y1 x2 y2 text font font-size]
+             :or {font-size 12}}
+            & children]
   (let [font (or font
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
     (.beginText cs)
     (.setFont cs font font-size)
     (.newLineAtOffset cs x1 (- y2 font-size))
     (.showText cs text)
-    (.endText cs)))
+    (.endText cs))
+  children)
+
+(defn grid [fig-opts & children]
+  (fo/grid fig-opts
+    (fn [cell-fig-opts]
+      (->> children
+        (mapv (fn [child]
+                (update child 1 #(merge % cell-fig-opts))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defn page-link [{:keys [page cs]}

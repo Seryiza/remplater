@@ -42,12 +42,19 @@
                   (concat splitted-pair))))
       [fig-opts])))
 
-(defn add-margin [fig-opts margin & [margin-horizontal]]
-  (-> fig-opts
-    (update :x1 + (or margin-horizontal margin))
-    (update :x2 - (or margin-horizontal margin))
-    (update :y1 + margin)
-    (update :y2 - margin)))
+(defn add-margin
+  ([fig-opts margin]
+   (add-margin fig-opts margin margin margin margin))
+
+  ([fig-opts margin-vertical margin-horizontal]
+   (add-margin fig-opts margin-horizontal margin-vertical margin-horizontal margin-vertical))
+
+  ([fig-opts margin-left margin-top margin-right margin-bottom]
+   (-> fig-opts
+     (update :x1 + margin-left)
+     (update :x2 - margin-right)
+     (update :y1 + margin-bottom)
+     (update :y2 - margin-top))))
 
 (defn grid [fig-opts f]
   (let [{:keys [x1 y1 x2 y2 rows cols]} fig-opts
@@ -60,5 +67,4 @@
                 (flatten)
                 (map-indexed #(assoc %2 :index %1)))]
     (->> cells
-      (map #(f %))
-      (doall))))
+      (mapv #(f %)))))
