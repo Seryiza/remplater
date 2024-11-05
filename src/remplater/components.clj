@@ -114,19 +114,29 @@
                   (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
-(defn page-link [{:keys [page cs]}
-                 {:keys [target-page x1 y1 x2 y2] :as fig-opts}]
-  (let [annotations (.getAnnotations page)
+(defn page-link [{:keys [page cs target-page x1 y1 x2 y2 *all-pages*] :as fig-opts} & children]
+  (let [target-page (cond
+                      (string? target-page)
+                      (->> *all-pages*
+                        (filter #(= target-page (:name %)))
+                        (first)
+                        (:page))
+
+                      :else
+                      target-page)
+        annotations (.getAnnotations page)
         annotation-link (PDAnnotationLink.)
         width (abs (- x2 x1))
         height (abs (- y2 y1))
         rect (PDRectangle. x1 y1 width height)
         go-to-action (PDActionGoTo.)
         destination (PDPageFitWidthDestination.)]
+    (prn target-page)
     (.setRectangle annotation-link rect)
     (.setPage destination target-page)
     (.setDestination go-to-action destination)
     (.setAction annotation-link go-to-action)
-    (.add annotations annotation-link)))
+    (.add annotations annotation-link))
+  children)
 
 (comment)

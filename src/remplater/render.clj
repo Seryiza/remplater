@@ -6,7 +6,8 @@
     [remplater.pdf :as pdf]))
 
 (def allowed-inherent-opts
-  #{:document :page :cs :x1 :x2 :y1 :y2})
+  #{:document :page :cs :x1 :x2 :y1 :y2
+    :*all-pages*})
 
 (defn render-tree [tree]
   (let [[component fig-opts & children] tree
@@ -29,17 +30,26 @@
   (with-open [document (pdf/make-document)]
     (let [{:keys [output]} (second document-tree)
           page-trees (->> (drop 2 document-tree)
+                       (map-indexed
+                         (fn [page-index page-tree]
+                           (let [page-size (get-in page-tree [1 :size])
+                                 page-obj (pdf/make-page
+                                            {:document document
+                                             :size page-size})]
+                             (-> page-tree
+                               (assoc-in [1 :document] document)
+                               (assoc-in [1 :page] page-obj)
+                               (assoc-in [1 :index] page-index)
+                               (update 1 #(merge % (-> page-obj
+                                                     pdf/page->pdrect
+                                                     pdf/pdrect->fig-opts)))))))
+                       (vec))
+          all-pages (->> page-trees
+                      (mapv #(get % 1)))
+          page-trees (->> page-trees
                        (mapv (fn [page-tree]
-                               (let [page-size (get-in page-tree [1 :size])
-                                     page-obj (pdf/make-page
-                                                {:document document
-                                                 :size page-size})]
-                                 (-> page-tree
-                                   (assoc-in [1 :document] document)
-                                   (assoc-in [1 :page] page-obj)
-                                   (update 1 #(merge % (-> page-obj
-                                                         pdf/page->pdrect
-                                                         pdf/pdrect->fig-opts))))))))]
+                               (-> page-tree
+                                 (assoc-in [1 :*all-pages*] all-pages)))))]
       (doseq [page-tree page-trees]
         (render-page page-tree))
       (pdf/save-document document output))))
