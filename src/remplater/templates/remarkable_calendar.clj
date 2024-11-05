@@ -16,9 +16,14 @@
      [c/split {:direction :y :splits [200]}
       [c/margin {:margin-bottom 20}
        [c/split {:direction :x :splits [#(/ % 7)]}
-        [c/rect {:fill? false
-                 :stroke? true
-                 :line-width 4}]]]
+        [c/div {}
+         [c/border {:border-right true
+                    :width 4}]
+         [c/split {:direction :y :splits [50]}
+          [c/text {:text "month num"}]
+          [c/text {:text "year num"}]]]
+        [c/div {}
+         [c/text {:text "month name"}]]]]
 
       [c/grid {:rows 5 :cols 7}
        [(fn [fig-opts]

@@ -70,3 +70,15 @@
                 (flatten)
                 (map-indexed #(assoc %2 :index %1)))]
     cells))
+
+(defn rect->border-line [fig-opts side]
+  (let [{:keys [x1 y1 x2 y2]} fig-opts
+        line (case side
+               :top [x1 y2 x2 y2]
+               :bottom [x1 y1 x2 y1]
+               :left [x1 y1 x1 y2]
+               :right [x2 y1 x2 y2])]
+    {:x1 (get line 0)
+     :y1 (get line 1)
+     :x2 (get line 2)
+     :y2 (get line 3)}))

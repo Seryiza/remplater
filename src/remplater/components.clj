@@ -24,6 +24,9 @@
 (defn page [{:as fig-opts :keys [document page]} & children]
   children)
 
+(defn div [fig-opts & children]
+  children)
+
 (defn rect [{:keys [fill? stroke? fill-color line-width
                     cs x1 y1 x2 y2]
              :or {fill? true
@@ -53,6 +56,24 @@
           (.stroke cs))
 
         (.closePath cs)))))
+
+(defn line [{:keys [cs x1 y1 x2 y2 width]}]
+  (pdf/with-graphics-state cs
+    (fn [cs]
+      (.setLineWidth cs width)
+      (.moveTo cs x1 y1)
+      (.lineTo cs x2 y2))))
+
+(defn border [{:as fig-opts :keys [border-left border-top border-right border-bottom]}]
+  (let [make-border-line-fn
+        (fn [border-type border-opts]
+          [line (merge fig-opts (fo/rect->border-line fig-opts border-type))])]
+    (->> [(when border-left
+            (make-border-line-fn :left border-left))
+          (when border-right
+            (make-border-line-fn :right border-right))]
+      (filter some?)
+      (vec))))
 
 (defn text [{:keys [cs x1 y1 x2 y2 text font font-size]
              :or {font-size 12}}

@@ -75,6 +75,7 @@
     (int (abs (rem y1 255)))
     (int (+ 120 (abs (rem (+ x1 y1) 100))))))
 
+;; TODO: use it in render-tree fn?
 (defn with-graphics-state [cs f]
   (.saveGraphicsState cs)
   (f cs)
