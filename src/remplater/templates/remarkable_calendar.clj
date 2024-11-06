@@ -31,15 +31,15 @@
 (defn monthly-days [{:as fig-opts :keys [year month]}]
   (let [days (get-monthly-days year month)]
     [[c/grid {:rows 5 :cols 7}
-      [(fn [fig-opts]
-         [[c/page-link {:target-page "day-01"}]
-          [c/rect {:fill? false
-                   :stroke? true
-                   :line-width 4}]
-          [c/margin {:margin-top 10
-                     :margin-left 20}
-           [c/text {:text (get days (:index fig-opts))
-                    :font-size 40}]]])]]]))
+      (fn [fig-opts]
+        [[c/page-link {:target-page "day-01"}]
+         [c/rect {:fill? false
+                  :stroke? true
+                  :line-width 4}]
+         [c/margin {:margin-top 10
+                    :margin-left 20}
+          [c/text {:text (get days (:index fig-opts))
+                   :font-size 40}]]])]]))
 
 (comment
   (render/render-document

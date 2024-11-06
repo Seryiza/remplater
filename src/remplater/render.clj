@@ -14,7 +14,10 @@
     (map? (second el))))
 
 (defn normalize-element [el]
-  (let [component (first el)
+  (let [el (cond
+             (vector? el) el
+             (fn? el) [el])
+        component (first el)
         has-attrs? (map? (second el))
         attrs (if has-attrs?
                 (second el)
