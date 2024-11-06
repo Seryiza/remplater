@@ -41,15 +41,16 @@
            [c/text {:text (get days (:index fig-opts))
                     :font-size 40}]]])]]]))
 
-(render/render-document
-  [c/document {:output "/tmp/remarkable_calendar.pdf"}
-   [c/page {:size pdf/remarkable-2-horizontal-page-size}
-    [c/margin {:margin 80
-               :margin-top 50}
-     [c/split {:direction :y :splits [200]}
-      [monthly-header {}]
-      [monthly-days {:year 2024 :month 10}]]]]
+(comment
+  (render/render-document
+    [c/document {:output "/tmp/remarkable_calendar.pdf"}
+     [c/page {:size pdf/remarkable-2-horizontal-page-size}
+      [c/margin {:margin 80
+                 :margin-top 50}
+       [c/split {:direction :y :splits [200]}
+        [monthly-header {}]
+        [monthly-days {:year 2024 :month 10}]]]]
 
-   [c/page {:name "day-01"
-            :size pdf/remarkable-2-horizontal-page-size}
-    [c/rect {:fill-color (pdf/make-color 150 150 150)}]]])
+     [c/page {:name "day-01"
+              :size pdf/remarkable-2-horizontal-page-size}
+      [c/rect {:fill-color (pdf/make-color 150 150 150)}]]]))

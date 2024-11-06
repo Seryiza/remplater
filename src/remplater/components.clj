@@ -2,7 +2,8 @@
   (:require
     [clojure.math :as math]
     [remplater.fig-operations :as fo]
-    [remplater.pdf :as pdf])
+    [remplater.pdf :as pdf]
+    [remplater.render :as render])
 
   (:import
     [org.apache.pdfbox.pdmodel PDDocument PDPage PDResources PDPageContentStream PDPageContentStream$AppendMode PDPatternContentStream]
@@ -28,7 +29,7 @@
   children)
 
 (defn rect [{:keys [fill? stroke? fill-color line-width
-                    cs x1 y1 x2 y2]
+                    x1 y1 x2 y2]
              :or {fill? true
                   stroke? false
                   line-width 1.0}
@@ -39,7 +40,7 @@
         height (abs (- y2 y1))
         fill-color (or fill-color
                      (pdf/make-color-by-fig-position fig-opts))]
-    (pdf/with-graphics-state cs
+    (pdf/with-graphics-state render/*cs*
       (fn [cs]
         (.setNonStrokingColor cs fill-color)
         (.setLineWidth cs line-width)
@@ -57,8 +58,8 @@
 
         (.closePath cs)))))
 
-(defn line [{:keys [cs x1 y1 x2 y2 width]}]
-  (pdf/with-graphics-state cs
+(defn line [{:keys [x1 y1 x2 y2 width]}]
+  (pdf/with-graphics-state render/*cs*
     (fn [cs]
       (.setLineWidth cs width)
       (.moveTo cs x1 y1)
@@ -75,16 +76,18 @@
       (filter some?)
       (vec))))
 
-(defn text [{:keys [cs x1 y1 x2 y2 text font font-size]
+(defn text [{:keys [x1 y1 x2 y2 text font font-size]
              :or {font-size 12}}
             & children]
   (let [font (or font
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
-    (.beginText cs)
-    (.setFont cs font font-size)
-    (.newLineAtOffset cs x1 (- y2 font-size))
-    (.showText cs text)
-    (.endText cs))
+    (pdf/with-graphics-state render/*cs*
+      (fn [cs]
+        (.beginText cs)
+        (.setFont cs font font-size)
+        (.newLineAtOffset cs x1 (- y2 font-size))
+        (.showText cs text)
+        (.endText cs))))
   children)
 
 (defn margin [fig-opts & children]
@@ -114,24 +117,23 @@
                   (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
-(defn page-link [{:keys [page cs target-page x1 y1 x2 y2 *all-pages*] :as fig-opts} & children]
+(defn page-link [{:keys [target-page x1 y1 x2 y2] :as fig-opts} & children]
   (let [target-page (cond
                       (string? target-page)
-                      (->> *all-pages*
+                      (->> render/*all-pages*
                         (filter #(= target-page (:name %)))
                         (first)
-                        (:page))
+                        (:page-obj))
 
                       :else
                       target-page)
-        annotations (.getAnnotations page)
+        annotations (.getAnnotations render/*page*)
         annotation-link (PDAnnotationLink.)
         width (abs (- x2 x1))
         height (abs (- y2 y1))
         rect (PDRectangle. x1 y1 width height)
         go-to-action (PDActionGoTo.)
         destination (PDPageFitWidthDestination.)]
-    (prn target-page)
     (.setRectangle annotation-link rect)
     (.setPage destination target-page)
     (.setDestination go-to-action destination)
