@@ -44,7 +44,7 @@
     (f page)))
 
 (defn with-page-content-stream [document page f]
-  (with-open [pcs (PDPageContentStream. document page PDPageContentStream$AppendMode/APPEND false)]
+  (with-open [pcs (PDPageContentStream. document page PDPageContentStream$AppendMode/APPEND true)]
     (f pcs)))
 
 ;; TODO: deprecated?
@@ -80,3 +80,33 @@
   (.saveGraphicsState cs)
   (f cs)
   (.restoreGraphicsState cs))
+
+(defn draw-circle [cs x y r]
+  (let [magic (* r 0.551784)]
+    (doto cs
+      (.moveTo x (+ y r))
+      (.curveTo (+ x magic)
+        (+ y r)
+        (+ x r)
+        (+ y magic)
+        (+ x r)
+        y)
+      (.curveTo (+ x r)
+        (- y magic)
+        (+ x magic)
+        (- y r)
+        x
+        (- y r))
+      (.curveTo (- x magic)
+        (- y r)
+        (- x r)
+        (- y magic)
+        (- x r)
+        y)
+      (.curveTo (- x r)
+        (+ y magic)
+        (- x magic)
+        (+ y r)
+        x
+        (+ y r))
+      (.closePath))))

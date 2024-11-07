@@ -38,8 +38,10 @@
   (let [;; TODO: add fig-opts->pdrect fn
         width (abs (- x2 x1))
         height (abs (- y2 y1))
-        fill-color (or fill-color
-                     (pdf/make-color-by-fig-position fig-opts))]
+        fill-color (cond
+                     (fn? fill-color) (fill-color fig-opts)
+                     (some? fill-color) fill-color
+                     :else (pdf/make-color-by-fig-position fig-opts))]
     (pdf/with-graphics-state render/*cs*
       (fn [cs]
         (.setNonStrokingColor cs fill-color)
@@ -141,4 +143,28 @@
     (.add annotations annotation-link))
   children)
 
-(comment)
+(defn pattern-box [{:as fig-opts
+                    :keys [pattern-width pattern-height
+                           pattern
+                           x1 y1 x2 y2]}
+                   & children]
+  (let [box-width (abs (- x2 x1))
+        box-height (abs (- y2 y1))
+        used-patterns-x (quot box-width pattern-width)
+        used-patterns-y (quot box-height pattern-height)
+        used-space-x (* pattern-width used-patterns-x)
+        used-space-y (* pattern-height used-patterns-y)
+        free-space-x (- box-width used-space-x)
+        free-space-y (- box-height used-space-y)]
+    (prn "!pattbox" box-width used-patterns-x)
+    ;; TODO: add align option
+    [split {:direction :x
+            :splits [(/ free-space-x 2) used-space-x]}
+     [div]
+     [split {:direction :y
+             :splits [(/ free-space-y 2) used-space-y]}
+      [div]
+      (into [grid {:rows used-patterns-y :cols used-patterns-x}]
+        children)
+      [div]]
+     [div]]))
