@@ -60,12 +60,28 @@
 
         (.closePath cs)))))
 
-(defn line [{:keys [x1 y1 x2 y2 width]}]
+(defn circle [{:as fig-opts :keys [radius fill-color]} & children]
+  (let [{:keys [x y]} (fo/rect->center fig-opts)]
+    (pdf/with-graphics-state render/*cs*
+      (fn [cs]
+        (doto cs
+          (.setNonStrokingColor fill-color)
+          (pdf/draw-circle x y radius)
+          (.fill))))))
+
+(defn line [{:keys [x1 y1 x2 y2 width cap-style]
+             :or {width 1
+                  cap-style 2}}
+            & children]
   (pdf/with-graphics-state render/*cs*
     (fn [cs]
-      (.setLineWidth cs width)
-      (.moveTo cs x1 y1)
-      (.lineTo cs x2 y2))))
+      (doto cs
+        (.setLineWidth width)
+        (.moveTo x1 y1)
+        (.lineTo x2 y2)
+        (.setLineCapStyle cap-style)
+        (.stroke))))
+  children)
 
 (defn border [{:as fig-opts :keys [border-left border-top border-right border-bottom]}]
   (let [make-border-line-fn
@@ -143,28 +159,35 @@
     (.add annotations annotation-link))
   children)
 
-(defn pattern-box [{:as fig-opts
-                    :keys [pattern-width pattern-height
-                           pattern
-                           x1 y1 x2 y2]}
-                   & children]
-  (let [box-width (abs (- x2 x1))
-        box-height (abs (- y2 y1))
-        used-patterns-x (quot box-width pattern-width)
-        used-patterns-y (quot box-height pattern-height)
-        used-space-x (* pattern-width used-patterns-x)
-        used-space-y (* pattern-height used-patterns-y)
-        free-space-x (- box-width used-space-x)
-        free-space-y (- box-height used-space-y)]
-    (prn "!pattbox" box-width used-patterns-x)
-    ;; TODO: add align option
-    [split {:direction :x
-            :splits [(/ free-space-x 2) used-space-x]}
-     [div]
-     [split {:direction :y
-             :splits [(/ free-space-y 2) used-space-y]}
-      [div]
-      (into [grid {:rows used-patterns-y :cols used-patterns-x}]
-        children)
-      [div]]
-     [div]]))
+;; TODO: add align option
+(defn aligned-pattern-wrapper [{:as fig-opts
+                                :keys [x1 y1 x2 y2
+                                       pattern-width pattern-height
+                                       horizontal-align vertical-align]}
+                               & children]
+  (into [margin (fo/aligned-pattern-wrapper fig-opts)]
+    children))
+
+(defn pattern-grid [{:as fig-opts
+                     :keys [pattern-width pattern-height
+                            cell line outline
+                            x1 y1 x2 y2]}
+                    & children]
+  (let [aligned-fig-opts (->> (assoc fig-opts :horizontal-align :center
+                                :vertical-align :center)
+                           (fo/aligned-pattern-wrapper)
+                           (fo/add-margin fig-opts))
+        {:keys [cells lines outlines]} (fo/pattern-grid aligned-fig-opts)]
+    [div
+     (when cell
+       (->> cells
+         (map #(merge-fig-opts cell %))
+         (into [div])))
+     (when line
+       (->> lines
+         (map #(merge-fig-opts line %))
+         (into [div])))
+     (when outline
+       (->> outlines
+         (map #(merge-fig-opts outline %))
+         (into [div])))]))

@@ -46,7 +46,9 @@
 
 (defn add-margin
   ([fig-opts margin]
-   (add-margin fig-opts margin margin margin margin))
+   (if (map? margin)
+     (add-margin fig-opts (:margin-left margin) (:margin-top margin) (:margin-right margin) (:margin-bottom margin))
+     (add-margin fig-opts margin margin margin margin)))
 
   ([fig-opts margin-vertical margin-horizontal]
    (add-margin fig-opts margin-horizontal margin-vertical margin-horizontal margin-vertical))
@@ -56,8 +58,7 @@
      (update :x1 + margin-left)
      (update :x2 - margin-right)
      (update :y1 + margin-bottom)
-     (update :y2 - margin-top)
-     (select-keys [:x1 :x2 :y1 :y2]))))
+     (update :y2 - margin-top))))
 
 (defn grid [fig-opts]
   (let [{:keys [x1 y1 x2 y2 rows cols]} fig-opts
@@ -82,3 +83,72 @@
      :y1 (get line 1)
      :x2 (get line 2)
      :y2 (get line 3)}))
+
+(defn rect->border-lines [fig-opts]
+  {:top (rect->border-line fig-opts :top)
+   :bottom (rect->border-line fig-opts :bottom)
+   :left (rect->border-line fig-opts :left)
+   :right (rect->border-line fig-opts :right)})
+
+(defn rect->center [{:as fig-opts :keys [x1 y1 x2 y2]}]
+  (let [width (abs (- x2 x1))
+        height (abs (- y2 y1))]
+    {:x (+ x1 (/ width 2))
+     :y (+ y1 (/ height 2))}))
+
+(defn pattern-grid [{:as fig-opts :keys [pattern-width pattern-height
+                                         x1 y1 x2 y2]}]
+  (comment
+    (pattern-grid {:x1 100
+                   :y1 100
+                   :x2 200
+                   :y2 200
+                   :pattern-width 10
+                   :pattern-height 10}))
+
+  (let [width (abs (- x2 x1))
+        height (abs (- y2 y1))
+        used-patterns-x (quot width pattern-width)
+        used-patterns-y (quot height pattern-height)
+        splits-x (vec (repeat (dec used-patterns-x) pattern-width))
+        splits-y (vec (repeat (dec used-patterns-y) pattern-height))
+        lines-x (->> (split fig-opts :x splits-x)
+                  (map #(rect->border-line % :right))
+                  (drop-last))
+        lines-y (->> (split fig-opts :y splits-y)
+                  (map #(rect->border-line % :bottom))
+                  (drop-last))
+        outlines (vals (rect->border-lines fig-opts))
+        cells (grid (assoc fig-opts
+                      :rows used-patterns-y
+                      :cols used-patterns-x))]
+    {:cells cells
+     :lines (concat lines-x lines-y)
+     :outlines outlines}))
+
+(defn aligned-pattern-wrapper [{:as fig-opts
+                                :keys [x1 y1 x2 y2
+                                       pattern-width pattern-height
+                                       horizontal-align vertical-align]}]
+  (let [box-width (abs (- x2 x1))
+        box-height (abs (- y2 y1))
+        used-patterns-x (quot box-width pattern-width)
+        used-patterns-y (quot box-height pattern-height)
+        used-space-x (* pattern-width used-patterns-x)
+        used-space-y (* pattern-height used-patterns-y)
+        free-space-x (- box-width used-space-x)
+        free-space-y (- box-height used-space-y)
+
+        horizontal-margin-opts
+        (case horizontal-align
+          :center {:margin-left (/ free-space-x 2)
+                   :margin-right (/ free-space-x 2)}
+          {})
+
+        vertical-margin-opts
+        (case vertical-align
+          :center {:margin-top (/ free-space-y 2)
+                   :margin-bottom (/ free-space-y 2)}
+          {})]
+    (merge horizontal-margin-opts
+      vertical-margin-opts)))

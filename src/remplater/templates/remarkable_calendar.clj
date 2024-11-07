@@ -20,7 +20,7 @@
 (defn monthly-page [{:keys [year month]}]
   (let [days (get-monthly-days year month)]
     [c/page {:size pdf/remarkable-2-horizontal-page-size
-             :name (str "month-" year "-" month)}
+             :name (str "monthly-page-" year "-" month)}
      [c/margin {:margin 80
                 :margin-top 50}
       [c/split {:direction :y :splits [200]}
@@ -49,31 +49,28 @@
             [c/text {:text (get days (:index fig-opts))
                      :font-size 40}]]])]]]]))
 
-(defn daily-page [{:keys [year month day]}]
-  [c/page {:name "day-01"
+(defn daily-layout [{:keys [year month day]}]
+  [c/aligned-pattern-wrapper (assoc patterns/cells
+                               :horizontal-align :center)
+   [c/split {:direction :y :splits [100]}
+    [c/split {:direction :x :splits [100]}
+     [c/text {:text "27"}]
+     [c/split {:direction :y :splits [#(/ % 2)]}
+      [c/text {:text "friday"}]
+      [c/text {:text "september"}]]]
+    [c/pattern-grid patterns/cells]]])
+
+(defn daily-page [{:as opts :keys [year month day]}]
+  [c/page {:name (str "daily-page-" year "-" month "-" day)
            :size pdf/remarkable-2-horizontal-page-size}
-   [c/margin {:margin 0
-              :margin-left 0}
-    #_[c/rect {:fill? true
-               :fill-color patterns/dots
-               :stroke? true}]
-    #_[c/pattern-box {:pattern-width 30
-                      :pattern-height 30
-                      :pattern patterns/dots}]
-    #_[c/grid {:rows 30 :cols 30}
-       [c/aaa]]
-    #_[c/pattern-box {:pattern-width 30
-                      :pattern-height 30}
-       [c/rect {:fill? false
-                :stroke? true}]]
-    [c/grid {:rows 2 :cols 2}
-     (fn [{:as fig-opts :keys [index]}]
-       (if (#{0 3} index)
-         [c/pattern-box {:pattern-width 30
-                         :pattern-height 30}
-          [c/rect {:fill? false
-                   :stroke? true}]]
-         [c/div]))]]])
+   [c/margin {:margin 80
+              :margin-top 50}
+    [c/split {:direction :x
+              :splits [#(/ % 2)]}
+     [c/margin {:margin-right 20}
+      [daily-layout opts]]
+     [c/margin {:margin-left 20}
+      [daily-layout opts]]]]])
 
 (comment
   (render/render-document
