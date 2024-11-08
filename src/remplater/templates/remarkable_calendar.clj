@@ -7,13 +7,18 @@
     [remplater.render :as render]
     [tick.core :as t]))
 
+(def dt-formatter-year (t/formatter "yyyy"))
+(def dt-formatter-short-month (t/formatter "M"))
+(def dt-formatter-long-month (t/formatter "MM"))
+(def dt-formatter-text-month (t/formatter "MMMM"))
+(def dt-formatter-short-day (t/formatter "d"))
+(def dt-formatter-long-day (t/formatter "dd"))
+(def dt-formatter-week-day (t/formatter "EEEE"))
+
 (defn date->units [date]
-  (let [year-fmt (t/formatter "YYYY")
-        month-fmt (t/formatter "M")
-        day-fmt (t/formatter "d")]
-    {:year (t/format year-fmt date)
-     :month (t/format month-fmt date)
-     :day (t/format day-fmt date)}))
+  {:year (t/format dt-formatter-year date)
+   :month (t/format dt-formatter-short-month date)
+   :day (t/format dt-formatter-short-day date)})
 
 (defn get-montly-page-name [date]
   (let [{:keys [year month]} (date->units date)]
@@ -23,20 +28,20 @@
   (let [{:keys [year month day]} (date->units date)]
     (str "daily-page-" year "-" month "-" day)))
 
-(defn range-days [from to & [step]]
-  (let [step (or step 1)]
+(defn range-dates [from to & [step]]
+  (let [step (or step (t/of-days 1))]
     (->> from
-      (iterate #(t/>> % (t/of-days step)))
+      (iterate #(t/>> % step))
       (take-while #(t/<= % to)))))
 
-(defn get-monthly-days [month-start]
-  (let [calendar-start-day (t/previous-or-same month-start t/MONDAY)
-        long-day-formatter (t/formatter "dd")]
+(defn get-monthly-days [date]
+  (let [month-start (t/first-day-of-month date)
+        calendar-start-day (t/previous-or-same month-start t/MONDAY)]
     (->> (range 35)
       (map (fn [day-offset]
              (t/>> calendar-start-day (t/of-days day-offset))))
       (mapv (fn [date]
-              {:label (t/format long-day-formatter date)
+              {:label (t/format dt-formatter-long-day date)
                :this-month? (= (t/month date) (t/month month-start))
                :page-name (get-daily-page-name date)})))))
 
@@ -55,10 +60,10 @@
           [c/border {:border-right true
                      :width 4}]
           [c/split {:direction :y :splits [50]}
-           [c/text {:text "month num"}]
-           [c/text {:text "year num"}]]]
+           [c/text {:text (t/format dt-formatter-long-month date)}]
+           [c/text {:text (t/format dt-formatter-year date)}]]]
          [c/div {}
-          [c/text {:text "month name"}]]]]
+          [c/text {:text (t/format dt-formatter-text-month date)}]]]]
 
        ;; days grid
        [c/grid {:rows 5 :cols 7}
@@ -78,34 +83,40 @@
                               :horizontal-align :center}
    [c/split {:direction :y :splits [100]}
     [c/split {:direction :x :splits [100]}
-     [c/text {:text "27"}]
+     [c/text {:text (t/format dt-formatter-long-day date)}]
      [c/split {:direction :y :splits [#(/ % 2)]}
-      [c/text {:text "friday"}]
-      [c/text {:text "september"}]]]
+      [c/text {:text (t/format dt-formatter-week-day date)}]
+      [c/page-link {:target-page (get-montly-page-name date)}
+       [c/text {:text (t/format dt-formatter-text-month date)}]]]]
     [c/pattern-grid {:pattern patterns/cells-pattern}]]])
 
-(defn daily-page [{:as opts :keys [date]}]
-  [c/page {:name (get-daily-page-name date)
-           :size pdf/remarkable-2-horizontal-page-size}
-   [c/margin {:margin 80
-              :margin-top 50}
-    [c/split {:direction :x
-              :splits [#(/ % 2)]}
-     [c/margin {:margin-right 20}
-      [daily-layout opts]]
-     [c/margin {:margin-left 20}
-      [daily-layout opts]]]]])
+(defn daily-page [{:as opts :keys [left-page-date]}]
+  (let [right-page-date (t/>> left-page-date (t/of-days 1))]
+    [c/page {:name (get-daily-page-name left-page-date)
+             :aliases [(get-daily-page-name right-page-date)]
+             :size pdf/remarkable-2-horizontal-page-size}
+     [c/margin {:margin 80
+                :margin-top 50}
+      [c/split {:direction :x
+                :splits [#(/ % 2)]}
+       [c/margin {:margin-right 20}
+        [daily-layout {:date left-page-date}]]
+       [c/margin {:margin-left 20}
+        [daily-layout {:date right-page-date}]]]]]))
+
+(defn remarkable-calendar [{:keys [from-date to-date]}]
+  (into [c/document {:output "/tmp/remarkable_calendar.pdf"}]
+    (concat
+      (->> (range-dates from-date to-date (t/of-months 1))
+        (mapv (fn [date]
+                [monthly-page {:date date}])))
+
+      (->> (range-dates from-date to-date (t/of-days 2))
+        (mapv (fn [date]
+                [daily-page {:left-page-date date}]))))))
 
 (comment
   (render/render-document
-    (into [c/document {:output "/tmp/remarkable_calendar.pdf"}]
-      (concat
-        (->> (range 11 12)
-          (mapv (fn [month]
-                  [monthly-page {:date (t/new-date 2024 month 1)}])))
-
-        (->> (range-days
-               (t/new-date 2024 10 28)
-               (t/new-date 2025 1 5))
-          (mapv (fn [date]
-                  [daily-page {:date date}])))))))
+    (remarkable-calendar
+      {:from-date (t/new-date 2024 1 1)
+       :to-date (t/new-date 2024 12 31)})))
