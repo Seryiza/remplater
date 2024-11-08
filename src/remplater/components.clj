@@ -16,8 +16,12 @@
     [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
 
+;; TODO: extract it to render?
 (defn merge-fig-opts [component & fig-opts]
-  (update component 1 #(apply merge (concat fig-opts [%]))))
+  (let [component (cond
+                    (fn? component) [component {}]
+                    :else component)]
+    (update component 1 #(apply merge (concat fig-opts [%])))))
 
 (defn document [fig-opts & children]
   children)
@@ -71,7 +75,7 @@
 
 (defn line [{:keys [x1 y1 x2 y2 width color cap-style]
              :or {width 1
-                  cap-style 2
+                  cap-style 0
                   color Color/BLACK}}
             & children]
   (pdf/with-graphics-state render/*cs*
@@ -175,6 +179,7 @@
   (into [margin (fo/aligned-pattern-wrapper fig-opts)]
     children))
 
+;; TODO: add draw-order attrs (to draw row lines over col lines)
 (defn pattern-grid [{:as fig-opts
                      :keys [pattern x1 y1 x2 y2]}
                     & children]
@@ -196,5 +201,5 @@
          (into [div])))
      (when outline
        (->> outlines
-         (map #(merge-fig-opts outline %))
+         (map #(merge-fig-opts outline % {:cap-style 2}))
          (into [div])))]))

@@ -15,6 +15,17 @@
 (def dt-formatter-long-day (t/formatter "dd"))
 (def dt-formatter-week-day (t/formatter "EEEE"))
 
+(def cells-pattern
+  {:width 45
+   :height 45
+   :draw-order [:line]
+   :line (fn [{:as fig-opts :keys [col-index]}]
+           (if (= 1 col-index)
+             [c/line {:color (pdf/make-color 0 0 0)
+                      :width 4}]
+             [c/line {:color (pdf/make-color 100 100 100)}]))
+   :outline [c/line {:color (pdf/make-color 100 100 100)}]})
+
 (defn date->units [date]
   {:year (t/format dt-formatter-year date)
    :month (t/format dt-formatter-short-month date)
@@ -79,7 +90,7 @@
                        :font-size 40}]]]))]]]]))
 
 (defn daily-layout [{:keys [date]}]
-  [c/aligned-pattern-wrapper {:pattern patterns/cells-pattern
+  [c/aligned-pattern-wrapper {:pattern cells-pattern
                               :horizontal-align :center}
    [c/split {:direction :y :splits [100]}
     [c/split {:direction :x :splits [100]}
@@ -88,7 +99,7 @@
       [c/text {:text (t/format dt-formatter-week-day date)}]
       [c/page-link {:target-page (get-montly-page-name date)}
        [c/text {:text (t/format dt-formatter-text-month date)}]]]]
-    [c/pattern-grid {:pattern patterns/cells-pattern}]]])
+    [c/pattern-grid {:pattern cells-pattern}]]])
 
 (defn daily-page [{:as opts :keys [left-page-date]}]
   (let [right-page-date (t/>> left-page-date (t/of-days 1))]

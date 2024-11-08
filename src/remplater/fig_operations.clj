@@ -97,14 +97,6 @@
      :y (+ y1 (/ height 2))}))
 
 (defn pattern-grid [{:as fig-opts :keys [pattern x1 y1 x2 y2]}]
-  (comment
-    (pattern-grid {:x1 100
-                   :y1 100
-                   :x2 200
-                   :y2 200
-                   :pattern-width 10
-                   :pattern-height 10}))
-
   (let [width (abs (- x2 x1))
         height (abs (- y2 y1))
         pattern-width (:width pattern)
@@ -115,16 +107,18 @@
         splits-y (vec (repeat (dec used-patterns-y) pattern-height))
         lines-x (->> (split fig-opts :x splits-x)
                   (map #(rect->border-line % :right))
+                  (map-indexed #(assoc %2 :col-index %1))
                   (drop-last))
         lines-y (->> (split fig-opts :y splits-y)
                   (map #(rect->border-line % :bottom))
+                  (map-indexed #(assoc %2 :row-index %1))
                   (drop-last))
         outlines (vals (rect->border-lines fig-opts))
         cells (grid (assoc fig-opts
                       :rows used-patterns-y
                       :cols used-patterns-x))]
     {:cells cells
-     :lines (concat lines-x lines-y)
+     :lines (concat lines-y lines-x)
      :outlines outlines}))
 
 (defn aligned-pattern-wrapper [{:as fig-opts
