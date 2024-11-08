@@ -79,7 +79,7 @@
        ;; days grid
        [c/grid {:rows 5 :cols 7}
         (fn [fig-opts]
-          (let [{:keys [label page-name]} (get days (:index fig-opts))]
+          (let [{:keys [label page-name this-month?]} (get days (:index fig-opts))]
             [[c/page-link {:target-page page-name}]
              [c/rect {:fill? false
                       :stroke? true
@@ -87,7 +87,10 @@
              [c/margin {:margin-top 10
                         :margin-left 20}
               [c/text {:text label
-                       :font-size 40}]]]))]]]]))
+                       :font-size 40
+                       :fill-color (if this-month?
+                                     (pdf/make-color 0 0 0)
+                                     (pdf/make-color 200 200 200))}]]]))]]]]))
 
 (defn daily-layout [{:keys [date]}]
   [c/aligned-pattern-wrapper {:pattern cells-pattern

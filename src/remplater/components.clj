@@ -100,14 +100,16 @@
       (filter some?)
       (vec))))
 
-(defn text [{:keys [x1 y1 x2 y2 text font font-size]
-             :or {font-size 12}}
+(defn text [{:keys [x1 y1 x2 y2 text font font-size fill-color]
+             :or {font-size 12
+                  fill-color Color/BLACK}}
             & children]
   (let [font (or font
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
     (pdf/with-graphics-state render/*cs*
       (fn [cs]
         (.beginText cs)
+        (.setNonStrokingColor cs fill-color)
         (.setFont cs font font-size)
         (.newLineAtOffset cs x1 (- y2 font-size))
         (.showText cs text)
