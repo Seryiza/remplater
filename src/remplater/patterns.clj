@@ -10,6 +10,9 @@
     [org.apache.pdfbox.pdmodel.common PDRectangle]
     [java.awt Color]))
 
+(def gray-line
+  [c/line {:color (pdf/make-color 100 100 100)}])
+
 (defn calc-offset [{:as fig-opts :keys [x1 y1 x2 y2 width height]}]
   (let [fig-width (abs (- x2 x1))
         fig-height (abs (- y2 y1))]
@@ -61,10 +64,10 @@
                       (.fill))))))
 
 (def cells-pattern
-  {:width 30
-   :height 30
-   :line [c/line {}]
-   :outline [c/line {}]})
+  {:width 45
+   :height 45
+   :line gray-line
+   :outline gray-line})
 
 (def dots
   {:width 30

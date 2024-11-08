@@ -69,14 +69,16 @@
           (pdf/draw-circle x y radius)
           (.fill))))))
 
-(defn line [{:keys [x1 y1 x2 y2 width cap-style]
+(defn line [{:keys [x1 y1 x2 y2 width color cap-style]
              :or {width 1
-                  cap-style 2}}
+                  cap-style 2
+                  color Color/BLACK}}
             & children]
   (pdf/with-graphics-state render/*cs*
     (fn [cs]
       (doto cs
         (.setLineWidth width)
+        (.setStrokingColor color)
         (.moveTo x1 y1)
         (.lineTo x2 y2)
         (.setLineCapStyle cap-style)
