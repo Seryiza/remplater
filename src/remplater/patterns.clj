@@ -60,15 +60,15 @@
                       (pdf/draw-circle (+ ox 0) (+ oy 0) 2)
                       (.fill))))))
 
-(def cells
-  {:pattern-width 30
-   :pattern-height 30
+(def cells-pattern
+  {:width 30
+   :height 30
    :line [c/line {}]
    :outline [c/line {}]})
 
 (def dots
-  {:pattern-width 30
-   :pattern-height 30
+  {:width 30
+   :height 30
    :outline [c/line]
    :cell [c/circle {:fill-color (pdf/make-color 100 100 100)
                     :radius 2}]})

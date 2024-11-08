@@ -161,22 +161,21 @@
 
 ;; TODO: add align option
 (defn aligned-pattern-wrapper [{:as fig-opts
-                                :keys [x1 y1 x2 y2
-                                       pattern-width pattern-height
+                                :keys [x1 y1 x2 y2 pattern
                                        horizontal-align vertical-align]}
                                & children]
   (into [margin (fo/aligned-pattern-wrapper fig-opts)]
     children))
 
 (defn pattern-grid [{:as fig-opts
-                     :keys [pattern-width pattern-height
-                            cell line outline
-                            x1 y1 x2 y2]}
+                     :keys [pattern x1 y1 x2 y2]}
                     & children]
-  (let [aligned-fig-opts (->> (assoc fig-opts :horizontal-align :center
+  (let [aligned-fig-opts (->> (assoc fig-opts
+                                :horizontal-align :center
                                 :vertical-align :center)
                            (fo/aligned-pattern-wrapper)
                            (fo/add-margin fig-opts))
+        {:keys [cell line outline]} pattern
         {:keys [cells lines outlines]} (fo/pattern-grid aligned-fig-opts)]
     [div
      (when cell

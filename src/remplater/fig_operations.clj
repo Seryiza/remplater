@@ -96,8 +96,7 @@
     {:x (+ x1 (/ width 2))
      :y (+ y1 (/ height 2))}))
 
-(defn pattern-grid [{:as fig-opts :keys [pattern-width pattern-height
-                                         x1 y1 x2 y2]}]
+(defn pattern-grid [{:as fig-opts :keys [pattern x1 y1 x2 y2]}]
   (comment
     (pattern-grid {:x1 100
                    :y1 100
@@ -108,6 +107,8 @@
 
   (let [width (abs (- x2 x1))
         height (abs (- y2 y1))
+        pattern-width (:width pattern)
+        pattern-height (:height pattern)
         used-patterns-x (quot width pattern-width)
         used-patterns-y (quot height pattern-height)
         splits-x (vec (repeat (dec used-patterns-x) pattern-width))
@@ -127,11 +128,12 @@
      :outlines outlines}))
 
 (defn aligned-pattern-wrapper [{:as fig-opts
-                                :keys [x1 y1 x2 y2
-                                       pattern-width pattern-height
+                                :keys [x1 y1 x2 y2 pattern
                                        horizontal-align vertical-align]}]
   (let [box-width (abs (- x2 x1))
         box-height (abs (- y2 y1))
+        pattern-width (:width pattern)
+        pattern-height (:height pattern)
         used-patterns-x (quot box-width pattern-width)
         used-patterns-y (quot box-height pattern-height)
         used-space-x (* pattern-width used-patterns-x)
