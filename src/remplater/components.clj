@@ -11,7 +11,7 @@
     [org.apache.pdfbox.pdmodel.graphics.color PDPattern PDColor PDDeviceRGB]
     [org.apache.pdfbox.pdmodel.common PDRectangle]
     [org.apache.pdfbox.pdmodel.font PDFont PDType1Font Standard14Fonts$FontName]
-    [org.apache.pdfbox.pdmodel.interactive.annotation PDAnnotationLink]
+    [org.apache.pdfbox.pdmodel.interactive.annotation PDAnnotationLink PDBorderStyleDictionary]
     [org.apache.pdfbox.pdmodel.interactive.action PDActionGoTo]
     [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
@@ -141,7 +141,9 @@
   (let [target-page (cond
                       (string? target-page)
                       (->> render/*all-pages*
-                        (filter #(= target-page (:name %)))
+                        (filter (fn [page]
+                                  (or (= target-page (:name page))
+                                    (some #(= target-page %) (:aliases page)))))
                         (first)
                         (:page-obj))
 
@@ -153,11 +155,15 @@
         height (abs (- y2 y1))
         rect (PDRectangle. x1 y1 width height)
         go-to-action (PDActionGoTo.)
-        destination (PDPageFitWidthDestination.)]
+        destination (PDPageFitWidthDestination.)
+        border-style (doto (PDBorderStyleDictionary.)
+                       (.setWidth 0))]
     (.setRectangle annotation-link rect)
     (.setPage destination target-page)
     (.setDestination go-to-action destination)
     (.setAction annotation-link go-to-action)
+    (.setHighlightMode annotation-link PDAnnotationLink/HIGHLIGHT_MODE_NONE)
+    (.setBorderStyle annotation-link border-style)
     (.add annotations annotation-link))
   children)
 
