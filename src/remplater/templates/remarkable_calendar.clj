@@ -54,6 +54,7 @@
       (mapv (fn [date]
               {:label (t/format dt-formatter-long-day date)
                :this-month? (= (t/month date) (t/month month-start))
+               :weekend? (#{t/SATURDAY t/SUNDAY} (t/day-of-week date))
                :page-name (get-daily-page-name date)})))))
 
 (defn monthly-page [{:keys [date]}]
@@ -79,18 +80,23 @@
        ;; days grid
        [c/grid {:rows 5 :cols 7}
         (fn [fig-opts]
-          (let [{:keys [label page-name this-month?]} (get days (:index fig-opts))]
+          (let [{:keys [label page-name this-month? weekend?]} (get days (:index fig-opts))]
             [[c/page-link {:target-page page-name}]
-             [c/rect {:fill? false
-                      :stroke? true
-                      :line-width 4}]
+             [c/rect (if weekend?
+                       {:fill? true
+                        :fill-color (pdf/make-color 230 230 230)
+                        :stroke? true
+                        :line-width 4}
+                       {:fill? false
+                        :stroke? true
+                        :line-width 4})]
              [c/margin {:margin-top 10
                         :margin-left 20}
               [c/text {:text label
                        :font-size 40
                        :fill-color (if this-month?
                                      (pdf/make-color 0 0 0)
-                                     (pdf/make-color 200 200 200))}]]]))]]]]))
+                                     (pdf/make-color 160 160 160))}]]]))]]]]))
 
 (defn daily-layout [{:keys [date]}]
   [c/aligned-pattern-wrapper {:pattern cells-pattern
