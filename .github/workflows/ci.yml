@@ -11,12 +11,12 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '8'
+          java-version: '21'
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@12.5
         with:
-          cli: 1.10.1.693
+          cli: 1.11.3.1463
           zprint: 1.2.3
 
       - name: Execute tests
