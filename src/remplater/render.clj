@@ -104,6 +104,12 @@
       (into [(first node) (second node)] children))
     tree))
 
+(defn load-fonts [document fonts]
+  (->> fonts
+    (reduce-kv (fn [fonts name path]
+                 (assoc fonts name (pdf/load-font document path)))
+      {})))
+
 (defn render-document [document-element]
   (with-open [document (pdf/make-document)]
     (let [document-tree (-> document-element
@@ -117,6 +123,8 @@
                         (filter loc-document?)
                         (first)
                         (zip/node))
+          document-el (-> document-el
+                        (update-in [1 :fonts] #(load-fonts document %)))
           output-path (get-in document-el [1 :output])
           pages (->> document-tree
                   (doc-tree-zip)
@@ -139,7 +147,7 @@
         (let [page-obj (get-in page [1 :page-obj])]
           (pdf/with-page-content-stream document page-obj
             (fn [cs]
-              (binding [*document* document
+              (binding [*document* document-el
                         *all-pages* all-pages-attrs
                         *page* page-obj
                         *cs* cs]

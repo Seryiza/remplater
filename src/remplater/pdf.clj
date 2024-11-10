@@ -1,8 +1,11 @@
 (ns remplater.pdf
+  (:require
+    [clojure.java.io :as io])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument PDPage PDResources PDPageContentStream PDPageContentStream$AppendMode PDPatternContentStream]
     [org.apache.pdfbox.pdmodel.graphics.pattern PDTilingPattern]
     [org.apache.pdfbox.pdmodel.graphics.color PDPattern PDColor PDDeviceRGB]
+    [org.apache.pdfbox.pdmodel.font PDFont PDType0Font]
     [org.apache.pdfbox.pdmodel.common PDRectangle]
     [java.awt Color]))
 
@@ -111,3 +114,6 @@
         x
         (+ y r))
       (.closePath))))
+
+(defn load-font [document resource-path]
+  (PDType0Font/load document (io/file (io/resource resource-path))))

@@ -114,7 +114,9 @@
                   text-offset 3
                   children-offset 0}}
             & children]
-  (let [font (or font
+  (let [font (or
+               (get-in render/*document* [1 :fonts font])
+               (get-in render/*document* [1 :fonts :default])
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
     (let [block-width (abs (- x2 x1))
           block-height (abs (- y2 y1))

@@ -137,7 +137,8 @@
         [daily-layout {:date right-page-date}]]]]]))
 
 (defn remarkable-calendar [{:keys [from-date to-date]}]
-  (into [c/document {:output "/tmp/remarkable_calendar.pdf"}]
+  (into [c/document {:output "/tmp/remarkable_calendar.pdf"
+                     :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
     (concat
       (->> (range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
