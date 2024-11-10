@@ -19,7 +19,6 @@
 (def cells-pattern
   {:width 45
    :height 45
-   :draw-order [:line]
    :line (fn [{:as fig-opts :keys [col-index row-index]}]
            (if (= 1 col-index)
              [c/line {:color (pdf/make-color 0 0 0)
@@ -146,11 +145,11 @@
                 :font-size 70
                 :valign :top
                 :halign :left}]
-       [c/page-link {:target-page (get-montly-page-name date)}
-        [c/text {:text (t/format dt-formatter-text-month date)
-                 :font-size 50
-                 :valign :top
-                 :halign :left}]]]]]
+       [c/text {:text (t/format dt-formatter-text-month date)
+                :font-size 50
+                :valign :top
+                :halign :left}
+        [c/page-link {:target-page (get-montly-page-name date)}]]]]]
     [c/pattern-grid {:pattern cells-pattern}]]])
 
 (defn daily-page [{:as opts :keys [left-page-date]}]

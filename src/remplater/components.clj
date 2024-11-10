@@ -111,7 +111,6 @@
                   fill-color Color/BLACK
                   valign :top
                   halign :left
-                  text-offset 3
                   children-offset 0}}
             & children]
   (let [font (or
@@ -122,6 +121,7 @@
           block-height (abs (- y2 y1))
           text-height font-size
           text-width (* font-size (/ (.getStringWidth font text) 1000))
+          text-offset (or text-offset (/ text-height 4))
           free-space-x (- block-width text-width)
           free-space-y (- block-height text-height)
           text-pos-x (case halign
