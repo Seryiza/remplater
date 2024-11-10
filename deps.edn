@@ -1,3 +1,8 @@
 {:paths ["resources" "src"]
  :deps {org.apache.pdfbox/pdfbox {:mvn/version "3.0.3"}
-        tick/tick {:mvn/version "1.0"}}}
+        tick/tick {:mvn/version "1.0"}}
+ :aliases {:test {:extra-paths ["test"]
+                  :extra-deps {io.github.cognitect-labs/test-runner
+                               {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                  :main-opts ["-m" "cognitect.test-runner"]
+                  :exec-fn cognitect.test-runner.api/test}}}

@@ -1,6 +1,7 @@
 (ns remplater.templates.remarkable-calendar
   (:require
     [clojure.string :as str]
+    [remplater.components]
     [remplater.fig-operations :as fo]
     [remplater.pdf :as pdf]
     [remplater.render :as render]
