@@ -1,5 +1,6 @@
 (ns remplater.templates.remarkable-calendar
   (:require
+    [clojure.string :as str]
     [remplater.components :as c]
     [remplater.fig-operations :as fo]
     [remplater.patterns :as patterns]
@@ -26,14 +27,15 @@
              [c/line {:color (pdf/make-color 100 100 100)}]))
    :outline [c/line {:color (pdf/make-color 100 100 100)}]
    :row (fn [{:as fig :keys [row-index rows]}]
-          (when (= 12 row-index)
+          (when (= 11 row-index)
             (let [this-and-next-rows (fo/join-two (get rows row-index) (get rows (inc row-index)))]
               [c/split (merge this-and-next-rows
                          {:direction :x :splits [(* 2 (:width cells-pattern))]})
                [c/text {:text "12"
-                        :font-size 24
+                        :font-size 40
                         :valign :center
                         :halign :center
+                        :text-offset 10
                         :children-offset 0}
                 [c/margin {:margin -5}
                  [c/rect {:fill-color (pdf/make-color 255 255 255)}]]]])))})
@@ -78,16 +80,29 @@
       [c/split {:direction :y :splits [200]}
 
        ;; header
-       [c/margin {:margin-bottom 20}
+       [c/margin {:margin-top 40
+                  :margin-bottom 40}
         [c/split {:direction :x :splits [#(/ % 7)]}
          [c/div {}
           [c/border {:border-right true
                      :width 4}]
-          [c/split {:direction :y :splits [50]}
-           [c/text {:text (t/format dt-formatter-long-month date)}]
-           [c/text {:text (t/format dt-formatter-year date)}]]]
+          [c/margin {:margin-right 30}
+           [c/split {:direction :y :splits [50]}
+            [c/text {:text (t/format dt-formatter-long-month date)
+                     :font-size 70
+                     :valign :center
+                     :halign :right}]
+            [c/text {:text (t/format dt-formatter-year date)
+                     :font-size 50
+                     :valign :center
+                     :halign :right}]]]]
          [c/div {}
-          [c/text {:text (t/format dt-formatter-text-month date)}]]]]
+          [c/margin {:margin-left 40}
+           [c/text {:text (t/format dt-formatter-text-month date)
+                    :text-offset 30
+                    :font-size 120
+                    :valign :top
+                    :halign :left}]]]]]
 
        ;; days grid
        [c/grid {:rows 5 :cols 7}
@@ -105,7 +120,7 @@
              [c/margin {:margin-top 10
                         :margin-left 20}
               [c/text {:text label
-                       :font-size 40
+                       :font-size 50
                        :fill-color (if this-month?
                                      (pdf/make-color 0 0 0)
                                      (pdf/make-color 160 160 160))}]]]))]]]]))
@@ -113,13 +128,29 @@
 (defn daily-layout [{:keys [date]}]
   [c/aligned-pattern-wrapper {:pattern cells-pattern
                               :horizontal-align :center}
-   [c/split {:direction :y :splits [100]}
-    [c/split {:direction :x :splits [100]}
-     [c/text {:text (t/format dt-formatter-long-day date)}]
-     [c/split {:direction :y :splits [#(/ % 2)]}
-      [c/text {:text (t/format dt-formatter-week-day date)}]
-      [c/page-link {:target-page (get-montly-page-name date)}
-       [c/text {:text (t/format dt-formatter-text-month date)}]]]]
+   [c/split {:direction :y :splits [150]}
+    [c/split {:direction :x :splits [(* 4 (:width cells-pattern))]}
+     [c/div {}
+      [c/border {:border-right true
+                 :width 4}]
+      [c/margin {:margin-right 20}
+       [c/text {:text (t/format dt-formatter-long-day date)
+                :font-size 130
+                :text-offset 30
+                :halign :center
+                :valign :center}]]]
+     [c/margin {:margin-left 30}
+      [c/split {:direction :y :splits [70]}
+       [c/text {:text (-> (t/format dt-formatter-week-day date)
+                        (str/upper-case))
+                :font-size 70
+                :valign :top
+                :halign :left}]
+       [c/page-link {:target-page (get-montly-page-name date)}
+        [c/text {:text (t/format dt-formatter-text-month date)
+                 :font-size 50
+                 :valign :top
+                 :halign :left}]]]]]
     [c/pattern-grid {:pattern cells-pattern}]]])
 
 (defn daily-page [{:as opts :keys [left-page-date]}]
