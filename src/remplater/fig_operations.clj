@@ -44,6 +44,28 @@
         [fig-opts])
       (vec))))
 
+;; TODO: add option for horizontal join
+;; TODO: add option to ignore borders and ~1px empty space between figs
+;; TODO: add join fn like split fn
+(defn join-two [fig-opts-1 fig-opts-2]
+  (let [left-bottom-order?
+        (and (<= (:x1 fig-opts-1) (:x1 fig-opts-2))
+          (<= (:y1 fig-opts-1) (:y1 fig-opts-2)))
+
+        [left-bottom-el right-top-el]
+        (if left-bottom-order?
+          [fig-opts-1 fig-opts-2]
+          [fig-opts-2 fig-opts-1])]
+    (cond
+      (and
+        (= (:x1 left-bottom-el) (:x1 right-top-el))
+        (= (:x2 left-bottom-el) (:x2 right-top-el))
+        (= (:y2 left-bottom-el) (:y1 right-top-el)))
+      {:x1 (:x1 left-bottom-el)
+       :y1 (:y1 left-bottom-el)
+       :x2 (:x2 right-top-el)
+       :y2 (:y2 right-top-el)})))
+
 (defn add-margin
   ([fig-opts margin]
    (if (map? margin)
@@ -107,12 +129,14 @@
         splits-x (vec (repeat (dec used-patterns-x) pattern-width))
         splits-y (vec (repeat (dec used-patterns-y) pattern-height))
         cols (->> (split fig-opts :x splits-x)
-               (map-indexed #(assoc %2 :col-index %1)))
+               (map-indexed #(assoc %2 :col-index %1))
+               (vec))
         lines-x (->> cols
                   (map #(rect->border-line % :right))
                   (drop-last))
         rows (->> (split fig-opts :y splits-y)
-               (map-indexed #(assoc %2 :row-index %1)))
+               (map-indexed #(assoc %2 :row-index %1))
+               (vec))
         lines-y (->> rows
                   (map #(rect->border-line % :bottom))
                   (drop-last))

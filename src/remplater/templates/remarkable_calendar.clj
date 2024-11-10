@@ -25,15 +25,18 @@
                       :width 4}]
              [c/line {:color (pdf/make-color 100 100 100)}]))
    :outline [c/line {:color (pdf/make-color 100 100 100)}]
-   :row (fn [{:as fig :keys [row-index]}]
-          (when (= 10 row-index)
-            [c/split {:direction :x :splits [(* 2 (:width cells-pattern))]}
-             [c/text {:text "12"
-                      :font-size 18
-                      :valign :center
-                      :halign :center
-                      :children-offset 0}
-              [c/rect {:fill-color (pdf/make-color 255 255 255)}]]]))})
+   :row (fn [{:as fig :keys [row-index rows]}]
+          (when (= 12 row-index)
+            (let [this-and-next-rows (fo/join-two (get rows row-index) (get rows (inc row-index)))]
+              [c/split (merge this-and-next-rows
+                         {:direction :x :splits [(* 2 (:width cells-pattern))]})
+               [c/text {:text "12"
+                        :font-size 24
+                        :valign :center
+                        :halign :center
+                        :children-offset 0}
+                [c/margin {:margin -5}
+                 [c/rect {:fill-color (pdf/make-color 255 255 255)}]]]])))})
 
 (defn date->units [date]
   {:year (t/format dt-formatter-year date)

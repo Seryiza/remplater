@@ -240,9 +240,9 @@
          (into [div])))
      (when row
        (->> rows
-         (map #(merge-fig-opts row %))
+         (map #(merge-fig-opts row % {:rows rows}))
          (into [div])))
      (when col
        (->> cols
-         (map #(merge-fig-opts col %))
+         (map #(merge-fig-opts col % {:cols cols}))
          (into [div])))]))
