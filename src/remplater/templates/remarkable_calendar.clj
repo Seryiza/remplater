@@ -19,12 +19,21 @@
   {:width 45
    :height 45
    :draw-order [:line]
-   :line (fn [{:as fig-opts :keys [col-index]}]
+   :line (fn [{:as fig-opts :keys [col-index row-index]}]
            (if (= 1 col-index)
              [c/line {:color (pdf/make-color 0 0 0)
                       :width 4}]
              [c/line {:color (pdf/make-color 100 100 100)}]))
-   :outline [c/line {:color (pdf/make-color 100 100 100)}]})
+   :outline [c/line {:color (pdf/make-color 100 100 100)}]
+   :row (fn [{:as fig :keys [row-index]}]
+          (when (= 10 row-index)
+            [c/split {:direction :x :splits [(* 2 (:width cells-pattern))]}
+             [c/text {:text "12"
+                      :font-size 18
+                      :valign :center
+                      :halign :center
+                      :children-offset 0}
+              [c/rect {:fill-color (pdf/make-color 255 255 255)}]]]))})
 
 (defn date->units [date]
   {:year (t/format dt-formatter-year date)

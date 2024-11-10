@@ -78,8 +78,9 @@
 ;; TODO: use it in render-tree fn?
 (defn with-graphics-state [cs f]
   (.saveGraphicsState cs)
-  (f cs)
-  (.restoreGraphicsState cs))
+  (let [result (f cs)]
+    (.restoreGraphicsState cs)
+    result))
 
 (defn draw-circle [cs x y r]
   (let [magic (* r 0.551784)]

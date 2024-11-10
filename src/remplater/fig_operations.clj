@@ -79,10 +79,11 @@
                :bottom [x1 y1 x2 y1]
                :left [x1 y1 x1 y2]
                :right [x2 y1 x2 y2])]
-    {:x1 (get line 0)
-     :y1 (get line 1)
-     :x2 (get line 2)
-     :y2 (get line 3)}))
+    (assoc fig-opts
+      :x1 (get line 0)
+      :y1 (get line 1)
+      :x2 (get line 2)
+      :y2 (get line 3))))
 
 (defn rect->border-lines [fig-opts]
   {:top (rect->border-line fig-opts :top)
@@ -105,13 +106,15 @@
         used-patterns-y (quot height pattern-height)
         splits-x (vec (repeat (dec used-patterns-x) pattern-width))
         splits-y (vec (repeat (dec used-patterns-y) pattern-height))
-        lines-x (->> (split fig-opts :x splits-x)
+        cols (->> (split fig-opts :x splits-x)
+               (map-indexed #(assoc %2 :col-index %1)))
+        lines-x (->> cols
                   (map #(rect->border-line % :right))
-                  (map-indexed #(assoc %2 :col-index %1))
                   (drop-last))
-        lines-y (->> (split fig-opts :y splits-y)
+        rows (->> (split fig-opts :y splits-y)
+               (map-indexed #(assoc %2 :row-index %1)))
+        lines-y (->> rows
                   (map #(rect->border-line % :bottom))
-                  (map-indexed #(assoc %2 :row-index %1))
                   (drop-last))
         outlines (vals (rect->border-lines fig-opts))
         cells (grid (assoc fig-opts
@@ -119,6 +122,8 @@
                       :cols used-patterns-x))]
     {:cells cells
      :lines (concat lines-y lines-x)
+     :rows rows
+     :cols cols
      :outlines outlines}))
 
 (defn aligned-pattern-wrapper [{:as fig-opts

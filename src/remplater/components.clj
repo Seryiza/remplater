@@ -62,7 +62,8 @@
           stroke?
           (.stroke cs))
 
-        (.closePath cs)))))
+        (.closePath cs)))
+    children))
 
 (defn circle [{:as fig-opts :keys [radius fill-color]} & children]
   (let [{:keys [x y]} (fo/rect->center fig-opts)]
@@ -100,21 +101,53 @@
       (filter some?)
       (vec))))
 
-(defn text [{:keys [x1 y1 x2 y2 text font font-size fill-color]
+;; TODO: add text-align attrs
+;; TODO: add align attr for children
+(defn text [{:as fig-opts
+             :keys [x1 y1 x2 y2
+                    halign valign text font font-size fill-color
+                    text-offset children-offset]
              :or {font-size 12
-                  fill-color Color/BLACK}}
+                  fill-color Color/BLACK
+                  valign :top
+                  halign :left
+                  text-offset 3
+                  children-offset 0}}
             & children]
   (let [font (or font
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
-    (pdf/with-graphics-state render/*cs*
-      (fn [cs]
-        (.beginText cs)
-        (.setNonStrokingColor cs fill-color)
-        (.setFont cs font font-size)
-        (.newLineAtOffset cs x1 (- y2 font-size))
-        (.showText cs text)
-        (.endText cs))))
-  children)
+    (let [block-width (abs (- x2 x1))
+          block-height (abs (- y2 y1))
+          text-height font-size
+          text-width (* font-size (/ (.getStringWidth font text) 1000))
+          free-space-x (- block-width text-width)
+          free-space-y (- block-height text-height)
+          text-pos-x (case halign
+                       :left x1
+                       :center (+ x1 (/ free-space-x 2))
+                       :right (+ x1 free-space-x))
+          text-pos-y (case valign
+                       :top (- y2 font-size)
+                       :center (+ y1 (/ free-space-y 2))
+                       :bottom y1)
+
+          child-fig-opts {:x1 text-pos-x
+                          :y1 (+ text-pos-y children-offset)
+                          :x2 (+ text-pos-x text-width)
+                          :y2 (+ text-pos-y text-height children-offset)}]
+      (if (not-empty children)
+        ;; TODO: make it as more elegant way?
+        (->> (concat children [[remplater.components/text fig-opts]])
+          (mapv #(merge-fig-opts % child-fig-opts)))
+
+        (pdf/with-graphics-state render/*cs*
+          (fn [cs]
+            (.beginText cs)
+            (.setNonStrokingColor cs fill-color)
+            (.setFont cs font font-size)
+            (.newLineAtOffset cs text-pos-x (+ text-pos-y text-offset))
+            (.showText cs text)
+            (.endText cs)))))))
 
 (defn margin [fig-opts & children]
   (let [mleft (or (:margin-left fig-opts) (:margin fig-opts) 0)
@@ -190,8 +223,8 @@
                                 :vertical-align :center)
                            (fo/aligned-pattern-wrapper)
                            (fo/add-margin fig-opts))
-        {:keys [cell line outline]} pattern
-        {:keys [cells lines outlines]} (fo/pattern-grid aligned-fig-opts)]
+        {:keys [cell line outline row col]} pattern
+        {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-fig-opts)]
     [div
      (when cell
        (->> cells
@@ -204,4 +237,12 @@
      (when outline
        (->> outlines
          (map #(merge-fig-opts outline % {:cap-style 2}))
+         (into [div])))
+     (when row
+       (->> rows
+         (map #(merge-fig-opts row %))
+         (into [div])))
+     (when col
+       (->> cols
+         (map #(merge-fig-opts col %))
          (into [div])))]))
