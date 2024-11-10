@@ -58,20 +58,19 @@
       (iterate #(t/>> % step))
       (take-while #(t/<= % to)))))
 
-(defn get-monthly-days [date]
+(defn get-monthly-days [{:keys [date to-date]}]
   (let [month-start (t/first-day-of-month date)
-        calendar-start-day (t/previous-or-same month-start t/MONDAY)]
-    (->> (range 35)
-      (map (fn [day-offset]
-             (t/>> calendar-start-day (t/of-days day-offset))))
+        calendar-start-day (t/previous-or-same month-start t/MONDAY)
+        calendar-end-day (t/min to-date (t/>> calendar-start-day (t/of-days 34)))]
+    (->> (range-dates calendar-start-day calendar-end-day)
       (mapv (fn [date]
               {:label (t/format dt-formatter-long-day date)
                :this-month? (= (t/month date) (t/month month-start))
                :weekend? (#{t/SATURDAY t/SUNDAY} (t/day-of-week date))
                :page-name (get-daily-page-name date)})))))
 
-(defn monthly-page [{:keys [date]}]
-  (let [days (get-monthly-days date)]
+(defn monthly-page [{:as opts :keys [date to-date]}]
+  (let [days (get-monthly-days opts)]
     [c/page {:size pdf/remarkable-2-horizontal-page-size
              :name (get-montly-page-name date)}
      [c/margin {:margin 80
@@ -106,23 +105,24 @@
        ;; days grid
        [c/grid {:rows 5 :cols 7}
         (fn [fig-opts]
-          (let [{:keys [label page-name this-month? weekend?]} (get days (:index fig-opts))]
-            [[c/page-link {:target-page page-name}]
-             [c/rect (if weekend?
-                       {:fill? true
-                        :fill-color (pdf/make-color 230 230 230)
-                        :stroke? true
-                        :line-width 4}
-                       {:fill? false
-                        :stroke? true
-                        :line-width 4})]
-             [c/margin {:margin-top 10
-                        :margin-left 20}
-              [c/text {:text label
-                       :font-size 50
-                       :fill-color (if this-month?
-                                     (pdf/make-color 0 0 0)
-                                     (pdf/make-color 160 160 160))}]]]))]]]]))
+          (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index fig-opts))]
+            (when day-info
+              [[c/page-link {:target-page page-name}]
+               [c/rect (if weekend?
+                         {:fill? true
+                          :fill-color (pdf/make-color 230 230 230)
+                          :stroke? true
+                          :line-width 4}
+                         {:fill? false
+                          :stroke? true
+                          :line-width 4})]
+               [c/margin {:margin-top 10
+                          :margin-left 20}
+                [c/text {:text label
+                         :font-size 50
+                         :fill-color (if this-month?
+                                       (pdf/make-color 0 0 0)
+                                       (pdf/make-color 160 160 160))}]]])))]]]]))
 
 (defn daily-layout [{:keys [date]}]
   [c/aligned-pattern-wrapper {:pattern cells-pattern
@@ -152,7 +152,7 @@
         [c/page-link {:target-page (get-montly-page-name date)}]]]]]
     [c/pattern-grid {:pattern cells-pattern}]]])
 
-(defn daily-page [{:as opts :keys [left-page-date]}]
+(defn daily-page [{:as opts :keys [left-page-date to-date]}]
   (let [right-page-date (t/>> left-page-date (t/of-days 1))]
     [c/page {:name (get-daily-page-name left-page-date)
              :aliases [(get-daily-page-name right-page-date)]
@@ -164,7 +164,8 @@
        [c/margin {:margin-right 20}
         [daily-layout {:date left-page-date}]]
        [c/margin {:margin-left 20}
-        [daily-layout {:date right-page-date}]]]]]))
+        (when (t/<= right-page-date to-date)
+          [daily-layout {:date right-page-date}])]]]]))
 
 (defn remarkable-calendar [{:keys [from-date to-date]}]
   (into [c/document {:output "/tmp/remarkable_calendar.pdf"
@@ -172,14 +173,16 @@
     (concat
       (->> (range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
-                [monthly-page {:date date}])))
+                [monthly-page {:to-date to-date
+                               :date date}])))
 
       (->> (range-dates from-date to-date (t/of-days 2))
         (mapv (fn [date]
-                [daily-page {:left-page-date date}]))))))
+                [daily-page {:left-page-date date
+                             :to-date to-date}]))))))
 
 (comment
   (render/render-document
     (remarkable-calendar
       {:from-date (t/new-date 2024 1 1)
-       :to-date (t/new-date 2024 12 31)})))
+       :to-date (t/new-date 2025 1 31)})))
