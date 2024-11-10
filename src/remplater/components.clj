@@ -15,23 +15,17 @@
     [org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination PDDestination PDPageFitWidthDestination]
     [java.awt Color]))
 
-;; TODO: extract it to render?
-(defn merge-fig-opts [component & fig-opts]
-  (let [component (cond
-                    (fn? component) [component {}]
-                    :else component)]
-    (update component 1 #(apply merge (concat fig-opts [%])))))
-
-(defmethod r/render :div [_ attrs & children]
+(defmethod r/render :div
+  [_ attrs & children]
   children)
 
-(defmethod r/render :rect [_ {:keys [fill? stroke? fill-color line-width
-                                     x1 y1 x2 y2]
-                              :or {fill? true
-                                   stroke? false
-                                   line-width 1.0}
-                              :as fig-opts}
-                           & children]
+(defmethod r/render :rect
+  [_ {:keys [fill? stroke? fill-color line-width x1 y1 x2 y2]
+      :or {fill? true
+           stroke? false
+           line-width 1.0}
+      :as fig-opts}
+   & children]
   (let [;; TODO: add fig-opts->pdrect fn
         width (abs (- x2 x1))
         height (abs (- y2 y1))
@@ -52,7 +46,8 @@
     (.closePath r/*cs*)
     children))
 
-(defmethod r/render :circle [_ {:as fig-opts :keys [radius fill-color]} & children]
+(defmethod r/render :circle
+  [_ {:as fig-opts :keys [radius fill-color]} & children]
   (let [{:keys [x y]} (fo/rect->center fig-opts)]
     (doto r/*cs*
       (.setNonStrokingColor fill-color)
@@ -60,11 +55,12 @@
       (.fill)))
   children)
 
-(defmethod r/render :line [_ {:keys [x1 y1 x2 y2 width color cap-style]
-                              :or {width 1
-                                   cap-style 0
-                                   color Color/BLACK}}
-                           & children]
+(defmethod r/render :line
+  [_ {:keys [x1 y1 x2 y2 width color cap-style]
+      :or {width 1
+           cap-style 0
+           color Color/BLACK}}
+   & children]
   (doto r/*cs*
     (.setLineWidth width)
     (.setStrokingColor color)
@@ -74,8 +70,9 @@
     (.stroke))
   children)
 
-(defmethod r/render :border [_ {:as fig-opts :keys [border-left border-top border-right border-bottom]}
-                             & children]
+(defmethod r/render :border
+  [_ {:as fig-opts :keys [border-left border-top border-right border-bottom]}
+   & children]
   (let [make-border-line-fn
         (fn [border-type border-opts]
           [:line (merge fig-opts (fo/rect->border-line fig-opts border-type))])]
@@ -88,16 +85,14 @@
 
 ;; TODO: add text-align attrs
 ;; TODO: add align attr for children
-(defmethod r/render :text [_ {:as fig-opts
-                              :keys [x1 y1 x2 y2
-                                     halign valign text font font-size fill-color
-                                     text-offset children-offset]
-                              :or {font-size 12
-                                   fill-color Color/BLACK
-                                   valign :top
-                                   halign :left
-                                   children-offset 0}}
-                           & children]
+(defmethod r/render :text
+  [_ {:as fig-opts :keys [x1 y1 x2 y2 halign valign text font font-size fill-color text-offset children-offset]
+      :or {font-size 12
+           fill-color Color/BLACK
+           valign :top
+           halign :left
+           children-offset 0}}
+   & children]
   (let [font (or
                (get-in r/*document* [1 :fonts font])
                (get-in r/*document* [1 :fonts :default])
@@ -125,7 +120,7 @@
       (if (not-empty children)
         ;; TODO: make it as more elegant way?
         (->> (concat children [[:text fig-opts]])
-          (mapv #(merge-fig-opts % child-fig-opts)))
+          (mapv #(r/merge-fig-opts % child-fig-opts)))
 
         (doto r/*cs*
           (.beginText)
@@ -135,34 +130,38 @@
           (.showText text)
           (.endText))))))
 
-(defmethod r/render :margin [_ fig-opts & children]
+(defmethod r/render :margin
+  [_ fig-opts & children]
   (let [mleft (or (:margin-left fig-opts) (:margin fig-opts) 0)
         mtop (or (:margin-top fig-opts) (:margin fig-opts) 0)
         mright (or (:margin-right fig-opts) (:margin fig-opts) 0)
         mbottom (or (:margin-bottom fig-opts) (:margin fig-opts) 0)
         new-fig-opts (fo/add-margin fig-opts mleft mtop mright mbottom)]
     (->> children
-      (mapv #(merge-fig-opts % new-fig-opts)))))
+      (mapv #(r/merge-fig-opts % new-fig-opts)))))
 
-(defmethod r/render :split [_ fig-opts & children]
+(defmethod r/render :split
+  [_ fig-opts & children]
   (let [split-points (fo/split fig-opts
                        (:direction fig-opts)
                        (:splits fig-opts))]
     (->> children
       (map-indexed
         (fn [index child]
-          (merge-fig-opts child (get split-points index))))
+          (r/merge-fig-opts child (get split-points index))))
       (vec))))
 
-(defmethod r/render :grid [_ fig-opts & children]
+(defmethod r/render :grid
+  [_ fig-opts & children]
   (let [cells-fig-opts (fo/grid fig-opts)]
     (->> cells-fig-opts
       (mapcat (fn [cell-fig-opts]
                 (->> children
-                  (mapv #(merge-fig-opts % fig-opts cell-fig-opts))))))))
+                  (mapv #(r/merge-fig-opts % fig-opts cell-fig-opts))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
-(defmethod r/render :page-link [_ {:keys [target-page x1 y1 x2 y2] :as fig-opts} & children]
+(defmethod r/render :page-link
+  [_ {:keys [target-page x1 y1 x2 y2]} & children]
   (let [target-page (cond
                       (string? target-page)
                       (->> r/*all-pages*
@@ -193,14 +192,15 @@
   children)
 
 ;; TODO: add align option
-(defmethod r/render :aligned-pattern-wrapper [_ fig-opts & children]
+(defmethod r/render :aligned-pattern-wrapper
+  [_ fig-opts & children]
   (into [:margin (fo/aligned-pattern-wrapper fig-opts)]
     children))
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
-(defmethod r/render :pattern-grid [_ {:as fig-opts
-                                      :keys [pattern x1 y1 x2 y2]}
-                                   & children]
+(defmethod r/render :pattern-grid
+  [_ {:as fig-opts :keys [pattern x1 y1 x2 y2]}
+   & children]
   (let [aligned-fig-opts (->> (assoc fig-opts
                                 :horizontal-align :center
                                 :vertical-align :center)
@@ -211,21 +211,21 @@
     [:div
      (when cell
        (->> cells
-         (map #(merge-fig-opts cell %))
+         (map #(r/merge-fig-opts cell %))
          (into [:div])))
      (when line
        (->> lines
-         (map #(merge-fig-opts line %))
+         (map #(r/merge-fig-opts line %))
          (into [:div])))
      (when outline
        (->> outlines
-         (map #(merge-fig-opts outline % {:cap-style 2}))
+         (map #(r/merge-fig-opts outline % {:cap-style 2}))
          (into [:div])))
      (when row
        (->> rows
-         (map #(merge-fig-opts row % {:rows rows}))
+         (map #(r/merge-fig-opts row % {:rows rows}))
          (into [:div])))
      (when col
        (->> cols
-         (map #(merge-fig-opts col % {:cols cols}))
+         (map #(r/merge-fig-opts col % {:cols cols}))
          (into [:div])))]))

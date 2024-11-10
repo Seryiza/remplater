@@ -44,6 +44,12 @@
                    (map normalize-element))]
     (into [component attrs] children)))
 
+(defn merge-fig-opts [component & fig-opts]
+  (let [component (cond
+                    (vector? component) component
+                    :else [component {}])]
+    (update component 1 #(apply merge (concat fig-opts [%])))))
+
 (defn find-first [pred coll]
   (some (fn [x]
           (when (pred x)
