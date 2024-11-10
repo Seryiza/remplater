@@ -39,33 +39,25 @@
                      (fn? fill-color) (fill-color fig-opts)
                      (some? fill-color) fill-color
                      :else (pdf/make-color-by-fig-position fig-opts))]
-    (pdf/with-graphics-state r/*cs*
-      (fn [cs]
-        (.setNonStrokingColor cs fill-color)
-        (.setLineWidth cs line-width)
-        (.addRect cs x1 y1 width height)
+    (doto r/*cs*
+      (.setNonStrokingColor fill-color)
+      (.setLineWidth line-width)
+      (.addRect x1 y1 width height))
 
-        (cond
-          (and fill? stroke?)
-          (.fillAndStroke cs)
+    (cond
+      (and fill? stroke?) (.fillAndStroke r/*cs*)
+      fill? (.fill r/*cs*)
+      stroke? (.stroke r/*cs*))
 
-          fill?
-          (.fill cs)
-
-          stroke?
-          (.stroke cs))
-
-        (.closePath cs)))
+    (.closePath r/*cs*)
     children))
 
 (defmethod r/render :circle [_ {:as fig-opts :keys [radius fill-color]} & children]
   (let [{:keys [x y]} (fo/rect->center fig-opts)]
-    (pdf/with-graphics-state r/*cs*
-      (fn [cs]
-        (doto cs
-          (.setNonStrokingColor fill-color)
-          (pdf/draw-circle x y radius)
-          (.fill)))))
+    (doto r/*cs*
+      (.setNonStrokingColor fill-color)
+      (pdf/draw-circle x y radius)
+      (.fill)))
   children)
 
 (defmethod r/render :line [_ {:keys [x1 y1 x2 y2 width color cap-style]
@@ -73,15 +65,13 @@
                                    cap-style 0
                                    color Color/BLACK}}
                            & children]
-  (pdf/with-graphics-state r/*cs*
-    (fn [cs]
-      (doto cs
-        (.setLineWidth width)
-        (.setStrokingColor color)
-        (.moveTo x1 y1)
-        (.lineTo x2 y2)
-        (.setLineCapStyle cap-style)
-        (.stroke))))
+  (doto r/*cs*
+    (.setLineWidth width)
+    (.setStrokingColor color)
+    (.moveTo x1 y1)
+    (.lineTo x2 y2)
+    (.setLineCapStyle cap-style)
+    (.stroke))
   children)
 
 (defmethod r/render :border [_ {:as fig-opts :keys [border-left border-top border-right border-bottom]}
@@ -137,14 +127,13 @@
         (->> (concat children [[:text fig-opts]])
           (mapv #(merge-fig-opts % child-fig-opts)))
 
-        (pdf/with-graphics-state r/*cs*
-          (fn [cs]
-            (.beginText cs)
-            (.setNonStrokingColor cs fill-color)
-            (.setFont cs font font-size)
-            (.newLineAtOffset cs text-pos-x (+ text-pos-y text-offset))
-            (.showText cs text)
-            (.endText cs)))))))
+        (doto r/*cs*
+          (.beginText)
+          (.setNonStrokingColor fill-color)
+          (.setFont font font-size)
+          (.newLineAtOffset text-pos-x (+ text-pos-y text-offset))
+          (.showText text)
+          (.endText))))))
 
 (defmethod r/render :margin [_ fig-opts & children]
   (let [mleft (or (:margin-left fig-opts) (:margin fig-opts) 0)

@@ -76,6 +76,12 @@
   (let [attrs (-> loc zip/node second)]
     (= 4 (count (select-keys attrs [:x1 :x2 :y1 :y2])))))
 
+(defn with-graphic-state [f]
+  (pdf/with-graphics-state *cs*
+    (fn [cs]
+      (binding [*cs* cs]
+        (f)))))
+
 (defn render-one [el]
   (let [[component attrs & children] (normalize-element el)
         result (apply render component attrs children)
@@ -96,8 +102,9 @@
             position (-> node-with-position
                        (second)
                        (select-keys [:x1 :y1 :x2 :y2]))
-            node (update node 1 merge position)]
-        (zip/replace loc (render-one node)))
+            node (update node 1 merge position)
+            rendered-node (with-graphic-state #(render-one node))]
+        (zip/replace loc rendered-node))
       loc)))
 
 (defn render-until-page-loc [loc]
