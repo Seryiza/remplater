@@ -8,6 +8,21 @@
 (def ^:dynamic *page* nil)
 (def ^:dynamic *cs* nil)
 
+(defmulti render
+  (fn [component-name attrs & children]
+    (cond
+      (keyword? component-name) component-name
+      (fn? component-name) :fn)))
+
+(defmethod render :document [_ attrs & children]
+  children)
+
+(defmethod render :page [_ attrs & children]
+  children)
+
+(defmethod render :fn [f attrs & children]
+  (apply f attrs children))
+
 (defn element? [el]
   (and (vector? el)
     (or (fn? (first el)) (keyword? (first el)))
@@ -51,12 +66,11 @@
     (iterate zip/up)
     (take-while some?)))
 
-;; TODO: use :page and :document instead of components
 (defn loc-page? [loc]
-  (-> loc zip/node first (= remplater.components/page)))
+  (-> loc zip/node first (= :page)))
 
 (defn loc-document? [loc]
-  (-> loc zip/node first (= remplater.components/document)))
+  (-> loc zip/node first (= :document)))
 
 (defn loc-has-position? [loc]
   (let [attrs (-> loc zip/node second)]
@@ -64,7 +78,7 @@
 
 (defn render-one [el]
   (let [[component attrs & children] (normalize-element el)
-        result (apply component attrs children)
+        result (apply render component attrs children)
         next-children (if (and (coll? result) (coll? (first result)))
                         result
                         [result])

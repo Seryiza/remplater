@@ -71,8 +71,8 @@
 
 (defn monthly-page [{:as opts :keys [date to-date]}]
   (let [days (get-monthly-days opts)]
-    [c/page {:size pdf/remarkable-2-horizontal-page-size
-             :name (get-montly-page-name date)}
+    [:page {:size pdf/remarkable-2-horizontal-page-size
+            :name (get-montly-page-name date)}
      [c/margin {:margin 80
                 :margin-top 50}
       [c/split {:direction :y :splits [200]}
@@ -154,9 +154,9 @@
 
 (defn daily-page [{:as opts :keys [left-page-date to-date]}]
   (let [right-page-date (t/>> left-page-date (t/of-days 1))]
-    [c/page {:name (get-daily-page-name left-page-date)
-             :aliases [(get-daily-page-name right-page-date)]
-             :size pdf/remarkable-2-horizontal-page-size}
+    [:page {:name (get-daily-page-name left-page-date)
+            :aliases [(get-daily-page-name right-page-date)]
+            :size pdf/remarkable-2-horizontal-page-size}
      [c/margin {:margin 80
                 :margin-top 50}
       [c/split {:direction :x
@@ -168,8 +168,8 @@
           [daily-layout {:date right-page-date}])]]]]))
 
 (defn remarkable-calendar [{:keys [from-date to-date]}]
-  (into [c/document {:output "/tmp/remarkable_calendar.pdf"
-                     :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
+  (into [:document {:output "/tmp/remarkable_calendar.pdf"
+                    :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
     (concat
       (->> (range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
