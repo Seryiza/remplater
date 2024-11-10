@@ -19,5 +19,16 @@ jobs:
           cli: 1.11.3.1463
           zprint: 1.2.3
 
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          # List all files containing dependencies:
+          key: cljdeps-${{ hashFiles('deps.edn') }}
+          restore-keys: cljdeps-
+
       - name: Execute tests
         run: clojure -X:test
