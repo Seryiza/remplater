@@ -200,24 +200,23 @@
         {:keys [cell line outline row col]} pattern
         {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-attrs)]
     [:div
-     ;; TODO: pass attrs to all components
      (when cell
        (->> cells
-         (map #(r/merge-unexisting-attrs cell %))
+         (map #(r/merge-unexisting-attrs cell % attrs))
          (into [:div])))
      (when line
        (->> lines
-         (map #(r/merge-unexisting-attrs line %))
+         (map #(r/merge-unexisting-attrs line % attrs))
          (into [:div])))
      (when outline
        (->> outlines
-         (map #(r/merge-unexisting-attrs outline % {:cap-style 2}))
+         (map #(r/merge-unexisting-attrs outline % {:cap-style 2} attrs))
          (into [:div])))
      (when row
        (->> rows
-         (map #(r/merge-unexisting-attrs row attrs % {:rows rows}))
+         (map #(r/merge-unexisting-attrs row % {:rows rows} attrs))
          (into [:div])))
      (when col
        (->> cols
-         (map #(r/merge-unexisting-attrs col attrs % {:cols cols}))
+         (map #(r/merge-unexisting-attrs col % {:cols cols} attrs))
          (into [:div])))]))

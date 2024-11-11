@@ -47,7 +47,7 @@
 (defn merge-unexisting-attrs [component & attrs]
   (-> component
     (normalize-component)
-    (update 1 #(apply merge (concat attrs [%])))))
+    (update 1 #(apply merge (concat (reverse attrs) [%])))))
 
 (defn find-first [pred coll]
   (some (fn [x]
