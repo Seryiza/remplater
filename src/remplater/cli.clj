@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [docopt.core :as docopt]
-    [remplater.render :as r]
+    [remplater.components.render :as r]
     [remplater.templates.remarkable-calendar :as template-remarkable-calendar]
     [tick.core :as t])
   (:gen-class))

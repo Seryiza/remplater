@@ -1,8 +1,8 @@
-(ns remplater.components
+(ns remplater.components.builtin-components
   (:require
-    [remplater.fig-operations :as fo]
-    [remplater.pdf :as pdf]
-    [remplater.render :as r])
+    [remplater.components.positioning :as fo]
+    [remplater.components.render :as r]
+    [remplater.pdf :as pdf])
 
   (:import
     [org.apache.pdfbox.pdmodel PDDocument PDPage PDResources PDPageContentStream PDPageContentStream$AppendMode PDPatternContentStream]
@@ -83,8 +83,6 @@
       (filter some?)
       (vec))))
 
-;; TODO: add text-align attrs
-;; TODO: add align attr for children
 (defmethod r/render :text
   [_ {:as fig-opts :keys [x1 y1 x2 y2 halign valign text font font-size fill-color text-offset children-offset]
       :or {font-size 12
@@ -191,7 +189,6 @@
     (.add annotations annotation-link))
   children)
 
-;; TODO: add align option
 (defmethod r/render :aligned-pattern-wrapper
   [_ fig-opts & children]
   (into [:margin (fo/aligned-pattern-wrapper fig-opts)]

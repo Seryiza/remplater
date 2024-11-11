@@ -1,4 +1,4 @@
-(ns remplater.render
+(ns remplater.components.render
   (:require
     [clojure.zip :as zip]
     [remplater.pdf :as pdf]))

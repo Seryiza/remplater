@@ -1,10 +1,10 @@
 (ns remplater.templates.remarkable-calendar
   (:require
     [clojure.string :as str]
-    [remplater.components]
-    [remplater.fig-operations :as fo]
+    [remplater.components.builtin-components]
+    [remplater.components.positioning :as fo]
+    [remplater.components.render :as render]
     [remplater.pdf :as pdf]
-    [remplater.render :as render]
     [tick.core :as t]))
 
 (def dt-formatter-year (t/formatter "yyyy"))

@@ -1,4 +1,4 @@
-(ns remplater.fig-operations)
+(ns remplater.components.positioning)
 
 (defn split-one [fig-opts coordinate split-size]
   (comment
@@ -150,6 +150,7 @@
      :cols cols
      :outlines outlines}))
 
+;; TODO: add align option
 (defn aligned-pattern-wrapper [{:as fig-opts
                                 :keys [x1 y1 x2 y2 pattern
                                        horizontal-align vertical-align]}]

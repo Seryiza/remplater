@@ -1,7 +1,7 @@
 (ns remplater.templates.remarkable-calendar-test
   (:require
     [clojure.test :refer [deftest is]]
-    [remplater.render :as render]
+    [remplater.components.render :as render]
     [remplater.templates.remarkable-calendar :as template]
     [tick.core :as t]))
 
