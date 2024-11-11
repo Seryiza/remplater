@@ -24,12 +24,12 @@
                      :width 4}]
              [:line {:color (pdf/make-color 100 100 100)}]))
    :outline [:line {:color (pdf/make-color 100 100 100)}]
-   :row (fn [{:as fig :keys [row-index rows]}]
-          (when (= 11 row-index)
+   :row (fn [{:as fig :keys [timeline-labels row-index rows]}]
+          (when-let [label (get timeline-labels row-index)]
             (let [this-and-next-rows (fo/join-two (get rows row-index) (get rows (inc row-index)))]
               [:split (merge this-and-next-rows
                         {:direction :x :splits [(* 2 (:width cells-pattern))]})
-               [:text {:text "12"
+               [:text {:text label
                        :font-size 40
                        :valign :center
                        :halign :center
@@ -123,7 +123,7 @@
                                       (pdf/make-color 0 0 0)
                                       (pdf/make-color 160 160 160))}]]])))]]]]))
 
-(defn daily-layout [{:keys [date]}]
+(defn daily-layout [{:keys [date timeline-labels]}]
   [:aligned-pattern-wrapper {:pattern cells-pattern
                              :horizontal-align :center}
    [:split {:direction :y :splits [150]}
@@ -149,9 +149,10 @@
                :valign :top
                :halign :left}
         [:page-link {:target-page (get-montly-page-name date)}]]]]]
-    [:pattern-grid {:pattern cells-pattern}]]])
+    [:pattern-grid {:pattern cells-pattern
+                    :timeline-labels timeline-labels}]]])
 
-(defn daily-page [{:as opts :keys [left-page-date to-date]}]
+(defn daily-page [{:as opts :keys [left-page-date to-date timeline-labels]}]
   (let [right-page-date (t/>> left-page-date (t/of-days 1))]
     [:page {:name (get-daily-page-name left-page-date)
             :aliases [(get-daily-page-name right-page-date)]
@@ -161,12 +162,14 @@
       [:split {:direction :x
                :splits [#(/ % 2)]}
        [:margin {:margin-right 20}
-        [daily-layout {:date left-page-date}]]
+        [daily-layout {:date left-page-date
+                       :timeline-labels timeline-labels}]]
        [:margin {:margin-left 20}
         (when (t/<= right-page-date to-date)
-          [daily-layout {:date right-page-date}])]]]]))
+          [daily-layout {:date right-page-date
+                         :timeline-labels timeline-labels}])]]]]))
 
-(defn document [{:keys [from-date to-date]}]
+(defn document [{:keys [from-date to-date timeline-labels]}]
   (into [:document {:output "/tmp/remarkable_calendar.pdf"
                     :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
     (concat
@@ -178,10 +181,12 @@
       (->> (range-dates from-date to-date (t/of-days 2))
         (mapv (fn [date]
                 [daily-page {:left-page-date date
-                             :to-date to-date}]))))))
+                             :to-date to-date
+                             :timeline-labels timeline-labels}]))))))
 
 (comment
   (render/render-document
     (document
       {:from-date (t/new-date 2024 1 1)
-       :to-date (t/new-date 2025 1 31)})))
+       :to-date (t/new-date 2025 1 31)
+       :timeline-labels {11 "12" 18 "XX"}})))

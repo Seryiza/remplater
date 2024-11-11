@@ -209,6 +209,7 @@
         {:keys [cell line outline row col]} pattern
         {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-fig-opts)]
     [:div
+     ;; TODO: pass fig-opts to all components
      (when cell
        (->> cells
          (map #(r/merge-fig-opts cell %))
@@ -223,9 +224,9 @@
          (into [:div])))
      (when row
        (->> rows
-         (map #(r/merge-fig-opts row % {:rows rows}))
+         (map #(r/merge-fig-opts row fig-opts % {:rows rows}))
          (into [:div])))
      (when col
        (->> cols
-         (map #(r/merge-fig-opts col % {:cols cols}))
+         (map #(r/merge-fig-opts col fig-opts % {:cols cols}))
          (into [:div])))]))
