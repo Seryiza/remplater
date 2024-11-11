@@ -31,4 +31,7 @@ jobs:
           restore-keys: cljdeps-
 
       - name: Execute tests
-        run: clojure -X:test
+        run: make test
+
+      - name: Build uberjar
+        run: make uberjar
