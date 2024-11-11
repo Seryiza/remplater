@@ -1,6 +1,6 @@
 (ns remplater.components.positioning)
 
-(defn split-one [fig-opts coordinate split-size]
+(defn split-one [attrs coordinate split-size]
   (comment
     (split-one {:x1 100 :y1 100 :x2 200 :y2 200} :x #(/ % 3))
     (split-one {:x1 100 :y1 100 :x2 200 :y2 200} :x 20)
@@ -10,8 +10,8 @@
         [lower-kw upper-kw] (if horizontal?
                               [:x1 :x2]
                               [:y1 :y2])
-        lower (get fig-opts lower-kw)
-        upper (get fig-opts upper-kw)
+        lower (get attrs lower-kw)
+        upper (get attrs upper-kw)
         total-size (abs (- upper lower))
         size-delta (if (fn? split-size)
                      (split-size total-size)
@@ -19,19 +19,19 @@
         splitted-coordinate (if horizontal?
                               (+ lower size-delta)
                               (- upper size-delta))
-        fig-opts-1 (-> fig-opts
-                     (assoc upper-kw splitted-coordinate))
-        fig-opts-2 (-> fig-opts
-                     (assoc lower-kw splitted-coordinate))]
+        attrs-1 (-> attrs
+                  (assoc upper-kw splitted-coordinate))
+        attrs-2 (-> attrs
+                  (assoc lower-kw splitted-coordinate))]
     (if horizontal?
-      [fig-opts-1 fig-opts-2]
-      [fig-opts-2 fig-opts-1])))
+      [attrs-1 attrs-2]
+      [attrs-2 attrs-1])))
 
-(defn split [fig-opts coordinate splits]
+(defn split [attrs coordinate splits]
   (comment
     (split {:x1 100 :y1 100 :x2 200 :y2 200} :y [10 20]))
 
-  (let [fig-opts (select-keys fig-opts [:x1 :y1 :x2 :y2])]
+  (let [attrs (select-keys attrs [:x1 :y1 :x2 :y2])]
     (->> splits
       (reduce (fn [all next-split]
                 (let [splitted-pair (split-one
@@ -41,21 +41,21 @@
                   (-> all
                     (drop-last)
                     (concat splitted-pair))))
-        [fig-opts])
+        [attrs])
       (vec))))
 
 ;; TODO: add option for horizontal join
 ;; TODO: add option to ignore borders and ~1px empty space between figs
 ;; TODO: add join fn like split fn
-(defn join-two [fig-opts-1 fig-opts-2]
+(defn join-two [attrs-1 attrs-2]
   (let [left-bottom-order?
-        (and (<= (:x1 fig-opts-1) (:x1 fig-opts-2))
-          (<= (:y1 fig-opts-1) (:y1 fig-opts-2)))
+        (and (<= (:x1 attrs-1) (:x1 attrs-2))
+          (<= (:y1 attrs-1) (:y1 attrs-2)))
 
         [left-bottom-el right-top-el]
         (if left-bottom-order?
-          [fig-opts-1 fig-opts-2]
-          [fig-opts-2 fig-opts-1])]
+          [attrs-1 attrs-2]
+          [attrs-2 attrs-1])]
     (cond
       (and
         (= (:x1 left-bottom-el) (:x1 right-top-el))
@@ -67,59 +67,59 @@
        :y2 (:y2 right-top-el)})))
 
 (defn add-margin
-  ([fig-opts margin]
+  ([attrs margin]
    (if (map? margin)
-     (add-margin fig-opts (:margin-left margin) (:margin-top margin) (:margin-right margin) (:margin-bottom margin))
-     (add-margin fig-opts margin margin margin margin)))
+     (add-margin attrs (:margin-left margin) (:margin-top margin) (:margin-right margin) (:margin-bottom margin))
+     (add-margin attrs margin margin margin margin)))
 
-  ([fig-opts margin-vertical margin-horizontal]
-   (add-margin fig-opts margin-horizontal margin-vertical margin-horizontal margin-vertical))
+  ([attrs margin-vertical margin-horizontal]
+   (add-margin attrs margin-horizontal margin-vertical margin-horizontal margin-vertical))
 
-  ([fig-opts margin-left margin-top margin-right margin-bottom]
-   (-> fig-opts
+  ([attrs margin-left margin-top margin-right margin-bottom]
+   (-> attrs
      (update :x1 + margin-left)
      (update :x2 - margin-right)
      (update :y1 + margin-bottom)
      (update :y2 - margin-top))))
 
-(defn grid [fig-opts]
-  (let [{:keys [x1 y1 x2 y2 rows cols]} fig-opts
+(defn grid [attrs]
+  (let [{:keys [x1 y1 x2 y2 rows cols]} attrs
         x-delta (/ (- x2 x1) cols)
         y-delta (/ (- y2 y1) rows)
         x-slices (repeat (dec cols) x-delta)
         y-slices (repeat (dec rows) y-delta)
-        cells (->> (split fig-opts :y y-slices)
+        cells (->> (split attrs :y y-slices)
                 (map #(split % :x x-slices))
                 (flatten)
                 (map-indexed #(assoc %2 :index %1)))]
     cells))
 
-(defn rect->border-line [fig-opts side]
-  (let [{:keys [x1 y1 x2 y2]} fig-opts
+(defn rect->border-line [attrs side]
+  (let [{:keys [x1 y1 x2 y2]} attrs
         line (case side
                :top [x1 y2 x2 y2]
                :bottom [x1 y1 x2 y1]
                :left [x1 y1 x1 y2]
                :right [x2 y1 x2 y2])]
-    (assoc fig-opts
+    (assoc attrs
       :x1 (get line 0)
       :y1 (get line 1)
       :x2 (get line 2)
       :y2 (get line 3))))
 
-(defn rect->border-lines [fig-opts]
-  {:top (rect->border-line fig-opts :top)
-   :bottom (rect->border-line fig-opts :bottom)
-   :left (rect->border-line fig-opts :left)
-   :right (rect->border-line fig-opts :right)})
+(defn rect->border-lines [attrs]
+  {:top (rect->border-line attrs :top)
+   :bottom (rect->border-line attrs :bottom)
+   :left (rect->border-line attrs :left)
+   :right (rect->border-line attrs :right)})
 
-(defn rect->center [{:as fig-opts :keys [x1 y1 x2 y2]}]
+(defn rect->center [{:keys [x1 y1 x2 y2]}]
   (let [width (abs (- x2 x1))
         height (abs (- y2 y1))]
     {:x (+ x1 (/ width 2))
      :y (+ y1 (/ height 2))}))
 
-(defn pattern-grid [{:as fig-opts :keys [pattern x1 y1 x2 y2]}]
+(defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
   (let [width (abs (- x2 x1))
         height (abs (- y2 y1))
         pattern-width (:width pattern)
@@ -128,20 +128,20 @@
         used-patterns-y (quot height pattern-height)
         splits-x (vec (repeat (dec used-patterns-x) pattern-width))
         splits-y (vec (repeat (dec used-patterns-y) pattern-height))
-        cols (->> (split fig-opts :x splits-x)
+        cols (->> (split attrs :x splits-x)
                (map-indexed #(assoc %2 :col-index %1))
                (vec))
         lines-x (->> cols
                   (map #(rect->border-line % :right))
                   (drop-last))
-        rows (->> (split fig-opts :y splits-y)
+        rows (->> (split attrs :y splits-y)
                (map-indexed #(assoc %2 :row-index %1))
                (vec))
         lines-y (->> rows
                   (map #(rect->border-line % :bottom))
                   (drop-last))
-        outlines (vals (rect->border-lines fig-opts))
-        cells (grid (assoc fig-opts
+        outlines (vals (rect->border-lines attrs))
+        cells (grid (assoc attrs
                       :rows used-patterns-y
                       :cols used-patterns-x))]
     {:cells cells
@@ -151,8 +151,7 @@
      :outlines outlines}))
 
 ;; TODO: add align option
-(defn aligned-pattern-wrapper [{:as fig-opts
-                                :keys [x1 y1 x2 y2 pattern
+(defn aligned-pattern-wrapper [{:keys [x1 y1 x2 y2 pattern
                                        horizontal-align vertical-align]}]
   (let [box-width (abs (- x2 x1))
         box-height (abs (- y2 y1))

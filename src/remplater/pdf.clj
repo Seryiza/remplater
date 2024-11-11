@@ -53,7 +53,7 @@
 (defn page->pdrect [page]
   (.getBBox page))
 
-(defn pdrect->fig-opts [^PDRectangle pdrect]
+(defn pdrect->attrs [^PDRectangle pdrect]
   {:x1 (.getLowerLeftX pdrect)
    :y1 (.getLowerLeftY pdrect)
    :x2 (.getUpperRightX pdrect)
@@ -64,7 +64,7 @@
     (Color. r g b a)
     (Color. r g b)))
 
-(defn make-color-by-fig-position [{:keys [x1 y1] :as fig-opts}]
+(defn make-color-by-attrs [{:keys [x1 y1]}]
   (make-color
     (int (abs (rem x1 255)))
     (int (abs (rem y1 255)))

@@ -24,15 +24,15 @@
       :or {fill? true
            stroke? false
            line-width 1.0}
-      :as fig-opts}
+      :as attrs}
    & children]
   (let [;; TODO: add fig-opts->pdrect fn
         width (abs (- x2 x1))
         height (abs (- y2 y1))
         fill-color (cond
-                     (fn? fill-color) (fill-color fig-opts)
+                     (fn? fill-color) (fill-color attrs)
                      (some? fill-color) fill-color
-                     :else (pdf/make-color-by-fig-position fig-opts))]
+                     :else (pdf/make-color-by-attrs attrs))]
     (doto r/*cs*
       (.setNonStrokingColor fill-color)
       (.setLineWidth line-width)
@@ -47,8 +47,8 @@
     children))
 
 (defmethod r/render :circle
-  [_ {:as fig-opts :keys [radius fill-color]} & children]
-  (let [{:keys [x y]} (fo/rect->center fig-opts)]
+  [_ {:as attrs :keys [radius fill-color]} & children]
+  (let [{:keys [x y]} (fo/rect->center attrs)]
     (doto r/*cs*
       (.setNonStrokingColor fill-color)
       (pdf/draw-circle x y radius)
@@ -71,11 +71,11 @@
   children)
 
 (defmethod r/render :border
-  [_ {:as fig-opts :keys [border-left border-top border-right border-bottom]}
+  [_ {:as attrs :keys [border-left border-top border-right border-bottom]}
    & children]
   (let [make-border-line-fn
         (fn [border-type border-opts]
-          [:line (merge fig-opts (fo/rect->border-line fig-opts border-type))])]
+          [:line (merge attrs (fo/rect->border-line attrs border-type))])]
     (->> [(when border-left
             (make-border-line-fn :left border-left))
           (when border-right
@@ -84,7 +84,7 @@
       (vec))))
 
 (defmethod r/render :text
-  [_ {:as fig-opts :keys [x1 y1 x2 y2 halign valign text font font-size fill-color text-offset children-offset]
+  [_ {:as attrs :keys [x1 y1 x2 y2 halign valign text font font-size fill-color text-offset children-offset]
       :or {font-size 12
            fill-color Color/BLACK
            valign :top
@@ -111,14 +111,14 @@
                        :center (+ y1 (/ free-space-y 2))
                        :bottom y1)
 
-          child-fig-opts {:x1 text-pos-x
-                          :y1 (+ text-pos-y children-offset)
-                          :x2 (+ text-pos-x text-width)
-                          :y2 (+ text-pos-y text-height children-offset)}]
+          child-attrs {:x1 text-pos-x
+                       :y1 (+ text-pos-y children-offset)
+                       :x2 (+ text-pos-x text-width)
+                       :y2 (+ text-pos-y text-height children-offset)}]
       (if (not-empty children)
         ;; TODO: make it as more elegant way?
-        (->> (concat children [[:text fig-opts]])
-          (mapv #(r/merge-fig-opts % child-fig-opts)))
+        (->> (concat children [[:text attrs]])
+          (mapv #(r/merge-unexisting-attrs % child-attrs)))
 
         (doto r/*cs*
           (.beginText)
@@ -129,33 +129,33 @@
           (.endText))))))
 
 (defmethod r/render :margin
-  [_ fig-opts & children]
-  (let [mleft (or (:margin-left fig-opts) (:margin fig-opts) 0)
-        mtop (or (:margin-top fig-opts) (:margin fig-opts) 0)
-        mright (or (:margin-right fig-opts) (:margin fig-opts) 0)
-        mbottom (or (:margin-bottom fig-opts) (:margin fig-opts) 0)
-        new-fig-opts (fo/add-margin fig-opts mleft mtop mright mbottom)]
+  [_ attrs & children]
+  (let [mleft (or (:margin-left attrs) (:margin attrs) 0)
+        mtop (or (:margin-top attrs) (:margin attrs) 0)
+        mright (or (:margin-right attrs) (:margin attrs) 0)
+        mbottom (or (:margin-bottom attrs) (:margin attrs) 0)
+        new-attrs (fo/add-margin attrs mleft mtop mright mbottom)]
     (->> children
-      (mapv #(r/merge-fig-opts % new-fig-opts)))))
+      (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
 (defmethod r/render :split
-  [_ fig-opts & children]
-  (let [split-points (fo/split fig-opts
-                       (:direction fig-opts)
-                       (:splits fig-opts))]
+  [_ attrs & children]
+  (let [split-points (fo/split attrs
+                       (:direction attrs)
+                       (:splits attrs))]
     (->> children
       (map-indexed
         (fn [index child]
-          (r/merge-fig-opts child (get split-points index))))
+          (r/merge-unexisting-attrs child (get split-points index))))
       (vec))))
 
 (defmethod r/render :grid
-  [_ fig-opts & children]
-  (let [cells-fig-opts (fo/grid fig-opts)]
-    (->> cells-fig-opts
-      (mapcat (fn [cell-fig-opts]
+  [_ attrs & children]
+  (let [cells-attrs (fo/grid attrs)]
+    (->> cells-attrs
+      (mapcat (fn [cell-attrs]
                 (->> children
-                  (mapv #(r/merge-fig-opts % fig-opts cell-fig-opts))))))))
+                  (mapv #(r/merge-unexisting-attrs % attrs cell-attrs))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defmethod r/render :page-link
@@ -190,40 +190,40 @@
   children)
 
 (defmethod r/render :aligned-pattern-wrapper
-  [_ fig-opts & children]
-  (into [:margin (fo/aligned-pattern-wrapper fig-opts)]
+  [_ attrs & children]
+  (into [:margin (fo/aligned-pattern-wrapper attrs)]
     children))
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
 (defmethod r/render :pattern-grid
-  [_ {:as fig-opts :keys [pattern x1 y1 x2 y2]}
+  [_ {:as attrs :keys [pattern x1 y1 x2 y2]}
    & children]
-  (let [aligned-fig-opts (->> (assoc fig-opts
-                                :horizontal-align :center
-                                :vertical-align :center)
+  (let [aligned-attrs (->> (assoc attrs
+                             :horizontal-align :center
+                             :vertical-align :center)
                            (fo/aligned-pattern-wrapper)
-                           (fo/add-margin fig-opts))
+                           (fo/add-margin attrs))
         {:keys [cell line outline row col]} pattern
-        {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-fig-opts)]
+        {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-attrs)]
     [:div
-     ;; TODO: pass fig-opts to all components
+     ;; TODO: pass attrs to all components
      (when cell
        (->> cells
-         (map #(r/merge-fig-opts cell %))
+         (map #(r/merge-unexisting-attrs cell %))
          (into [:div])))
      (when line
        (->> lines
-         (map #(r/merge-fig-opts line %))
+         (map #(r/merge-unexisting-attrs line %))
          (into [:div])))
      (when outline
        (->> outlines
-         (map #(r/merge-fig-opts outline % {:cap-style 2}))
+         (map #(r/merge-unexisting-attrs outline % {:cap-style 2}))
          (into [:div])))
      (when row
        (->> rows
-         (map #(r/merge-fig-opts row fig-opts % {:rows rows}))
+         (map #(r/merge-unexisting-attrs row attrs % {:rows rows}))
          (into [:div])))
      (when col
        (->> cols
-         (map #(r/merge-fig-opts col fig-opts % {:cols cols}))
+         (map #(r/merge-unexisting-attrs col attrs % {:cols cols}))
          (into [:div])))]))

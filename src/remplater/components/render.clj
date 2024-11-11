@@ -9,10 +9,10 @@
 (def ^:dynamic *cs* nil)
 
 (defmulti render
-  (fn [component-name attrs & children]
+  (fn [component attrs & children]
     (cond
-      (keyword? component-name) component-name
-      (fn? component-name) :fn)))
+      (keyword? component) component
+      (fn? component) :fn)))
 
 (defmethod render :document [_ attrs & children]
   children)
@@ -23,12 +23,12 @@
 (defmethod render :fn [f attrs & children]
   (apply f attrs children))
 
-(defn element? [el]
+(defn component? [el]
   (and (vector? el)
     (or (fn? (first el)) (keyword? (first el)))
     (map? (second el))))
 
-(defn normalize-element [el]
+(defn normalize-component [el]
   (let [el (cond
              (vector? el) el
              (fn? el) [el])
@@ -41,14 +41,13 @@
                    (drop 2 el)
                    (rest el))
         children (->> children
-                   (map normalize-element))]
+                   (map normalize-component))]
     (into [component attrs] children)))
 
-(defn merge-fig-opts [component & fig-opts]
-  (let [component (cond
-                    (vector? component) component
-                    :else [component {}])]
-    (update component 1 #(apply merge (concat fig-opts [%])))))
+(defn merge-unexisting-attrs [component & attrs]
+  (-> component
+    (normalize-component)
+    (update 1 #(apply merge (concat attrs [%])))))
 
 (defn find-first [pred coll]
   (some (fn [x]
@@ -88,19 +87,19 @@
       (binding [*cs* cs]
         (f)))))
 
-(defn render-one [el]
-  (let [[component attrs & children] (normalize-element el)
+(defn render-one [node]
+  (let [[component attrs & children] (normalize-component node)
         result (apply render component attrs children)
         next-children (if (and (coll? result) (coll? (first result)))
                         result
                         [result])
         next-children (->> next-children
-                        (map normalize-element))]
+                        (map normalize-component))]
     (into [component attrs] next-children)))
 
 (defn render-loc [loc]
   (let [node (zip/node loc)]
-    (if (element? node)
+    (if (component? node)
       (let [node-with-position (->> loc
                                  (zip-up)
                                  (find-first loc-has-position?)
@@ -115,7 +114,7 @@
 
 (defn render-until-page-loc [loc]
   (let [node (-> loc zip/node)]
-    (if (and (element? node)
+    (if (and (component? node)
           (not (->> loc zip-up (find-first loc-page?))))
       (zip/replace loc (render-one node))
       loc)))
@@ -123,7 +122,7 @@
 (defn doc-tree-zip [tree]
   (zip/zipper
     (fn [node]
-      (and (element? node)
+      (and (component? node)
         (seq (drop 2 node))))
     (fn [node]
       (drop 2 node))
@@ -133,27 +132,28 @@
 
 (defn load-fonts [document fonts]
   (->> fonts
-    (reduce-kv (fn [fonts name path]
-                 (assoc fonts name (pdf/load-font document path)))
+    (reduce-kv
+      (fn [fonts name path]
+        (assoc fonts name (pdf/load-font document path)))
       {})))
 
-(defn render-document [document-element]
+(defn render-document [document-node]
   (with-open [document (pdf/make-document)]
-    (let [document-tree (-> document-element
-                          (normalize-element)
+    (let [tree (-> document-node
+                 (normalize-component)
+                 (doc-tree-zip)
+                 (alter-loc render-until-page-loc)
+                 (zip/node))
+          document-node (->> tree
                           (doc-tree-zip)
-                          (alter-loc render-until-page-loc)
+                          (iter-zip)
+                          (filter loc-document?)
+                          (first)
                           (zip/node))
-          document-el (->> document-tree
-                        (doc-tree-zip)
-                        (iter-zip)
-                        (filter loc-document?)
-                        (first)
-                        (zip/node))
-          document-el (-> document-el
-                        (update-in [1 :fonts] #(load-fonts document %)))
-          output-path (get-in document-el [1 :output])
-          pages (->> document-tree
+          document-node (-> document-node
+                          (update-in [1 :fonts] #(load-fonts document %)))
+          output-path (get-in document-node [1 :output])
+          pages (->> tree
                   (doc-tree-zip)
                   (iter-zip)
                   (filter loc-page?)
@@ -167,14 +167,14 @@
                              (assoc-in [1 :page-obj] page-obj)
                              (update 1 merge (-> page-obj
                                                pdf/page->pdrect
-                                               pdf/pdrect->fig-opts)))))))
+                                               pdf/pdrect->attrs)))))))
           all-pages-attrs (->> pages
                             (mapv second))]
       (doseq [page pages]
         (let [page-obj (get-in page [1 :page-obj])]
           (pdf/with-page-content-stream document page-obj
             (fn [cs]
-              (binding [*document* document-el
+              (binding [*document* document-node
                         *all-pages* all-pages-attrs
                         *page* page-obj
                         *cs* cs]

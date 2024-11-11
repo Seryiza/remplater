@@ -18,7 +18,7 @@
 (def cells-pattern
   {:width 45
    :height 45
-   :line (fn [{:as fig-opts :keys [col-index row-index]}]
+   :line (fn [{:keys [col-index row-index]}]
            (if (= 1 col-index)
              [:line {:color (pdf/make-color 0 0 0)
                      :width 4}]
@@ -103,8 +103,8 @@
 
        ;; days grid
        [:grid {:rows 5 :cols 7}
-        (fn [fig-opts]
-          (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index fig-opts))]
+        (fn [attrs]
+         (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index attrs))]
             (when day-info
               [[:page-link {:target-page page-name}]
                [:rect (if weekend?
