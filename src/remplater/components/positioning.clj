@@ -1,4 +1,15 @@
-(ns remplater.components.positioning)
+(ns remplater.components.positioning
+  (:import
+    [org.apache.pdfbox.pdmodel.common PDRectangle]))
+
+(defn attrs->sizes [{:keys [x1 y1 x2 y2]}]
+  (let [width (abs (- x2 x1))
+        height (abs (- y2 y1))]
+    [width height]))
+
+(defn attrs->pdrect [{:as attrs :keys [x1 y1]}]
+  (let [[width height] (attrs->sizes attrs)]
+    (PDRectangle. x1 y1 width height)))
 
 (defn split-one [attrs coordinate split-size]
   (comment
@@ -113,15 +124,13 @@
    :left (rect->border-line attrs :left)
    :right (rect->border-line attrs :right)})
 
-(defn rect->center [{:keys [x1 y1 x2 y2]}]
-  (let [width (abs (- x2 x1))
-        height (abs (- y2 y1))]
+(defn rect->center [{:as attrs :keys [x1 y1 x2 y2]}]
+  (let [[width height] (attrs->sizes attrs)]
     {:x (+ x1 (/ width 2))
      :y (+ y1 (/ height 2))}))
 
 (defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
-  (let [width (abs (- x2 x1))
-        height (abs (- y2 y1))
+  (let [[width height] (attrs->sizes attrs)
         pattern-width (:width pattern)
         pattern-height (:height pattern)
         used-patterns-x (quot width pattern-width)

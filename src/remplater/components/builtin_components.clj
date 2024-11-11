@@ -26,9 +26,7 @@
            line-width 1.0}
       :as attrs}
    & children]
-  (let [;; TODO: add fig-opts->pdrect fn
-        width (abs (- x2 x1))
-        height (abs (- y2 y1))
+  (let [[width height] (fo/attrs->sizes attrs)
         fill-color (cond
                      (fn? fill-color) (fill-color attrs)
                      (some? fill-color) fill-color
@@ -159,7 +157,7 @@
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defmethod r/render :page-link
-  [_ {:keys [target-page x1 y1 x2 y2]} & children]
+  [_ {:as attrs :keys [target-page x1 y1 x2 y2]} & children]
   (let [target-page (cond
                       (string? target-page)
                       (->> r/*all-pages*
@@ -173,9 +171,7 @@
                       target-page)
         annotations (.getAnnotations r/*page*)
         annotation-link (PDAnnotationLink.)
-        width (abs (- x2 x1))
-        height (abs (- y2 y1))
-        rect (PDRectangle. x1 y1 width height)
+        rect (fo/attrs->pdrect attrs)
         go-to-action (PDActionGoTo.)
         destination (PDPageFitWidthDestination.)
         border-style (doto (PDBorderStyleDictionary.)
