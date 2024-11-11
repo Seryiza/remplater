@@ -80,3 +80,37 @@
            :margin-right 25
            :margin-top 25
            :margin-bottom 25}))))
+
+(deftest grid
+  (is (= [{:x1 0 :y1 25 :x2 25 :y2 50 :index 0}
+          {:x1 25 :y1 25 :x2 50 :y2 50 :index 1}
+          {:x1 0 :y1 0 :x2 25 :y2 25 :index 2}
+          {:x1 25 :y1 0 :x2 50 :y2 25 :index 3}]
+        (pos/grid {:x1 0 :y1 0 :x2 50 :y2 50 :rows 2 :cols 2})))
+
+  (is (= [{:x1 0 :y1 0 :x2 20 :y2 60 :index 0}
+          {:x1 20 :y1 0 :x2 40 :y2 60 :index 1}
+          {:x1 40 :y1 0 :x2 60 :y2 60 :index 2}]
+        (pos/grid {:x1 0 :y1 0 :x2 60 :y2 60 :rows 1 :cols 3})))
+
+  (is (= [{:x1 0 :y1 0 :x2 50 :y2 50 :index 0}]
+        (pos/grid {:x1 0 :y1 0 :x2 50 :y2 50 :rows 1 :cols 1}))))
+
+(deftest rect->border-line
+  (let [attrs {:x1 0 :y1 0 :x2 100 :y2 100}
+        bottom {:x1 0 :y1 0 :x2 100 :y2 0}
+        top {:x1 0 :y1 100 :x2 100 :y2 100}
+        left {:x1 0 :y1 0 :x2 0 :y2 100}
+        right {:x1 100 :y1 0 :x2 100 :y2 100}]
+    (is (= bottom (pos/rect->border-line attrs :bottom)))
+    (is (= top (pos/rect->border-line attrs :top)))
+    (is (= left (pos/rect->border-line attrs :left)))
+    (is (= right (pos/rect->border-line attrs :right)))
+    (is (= {:top top :left left :right right :bottom bottom}
+          (pos/rect->border-lines attrs)))))
+
+(deftest rect->center
+  (is (= {:x 50 :y 50}
+        (pos/rect->center {:x1 0 :y1 0 :x2 100 :y2 100})))
+  (is (= {:x 50 :y 0}
+        (pos/rect->center {:x1 0 :y1 0 :x2 100 :y2 0}))))
