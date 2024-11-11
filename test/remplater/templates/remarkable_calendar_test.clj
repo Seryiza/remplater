@@ -7,6 +7,6 @@
 
 (deftest render-without-exceptions
   (is (nil? (render/render-document
-              (template/remarkable-calendar
+              (template/document
                 {:from-date (t/new-date 2024 1 1)
                  :to-date (t/new-date 2025 1 31)})))))
