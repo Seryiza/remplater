@@ -132,19 +132,17 @@
         mtop (or (:margin-top attrs) (:margin attrs) 0)
         mright (or (:margin-right attrs) (:margin attrs) 0)
         mbottom (or (:margin-bottom attrs) (:margin attrs) 0)
-        new-attrs (fo/add-margin attrs mleft mtop mright mbottom)]
+        new-attrs (fo/margin attrs mleft mtop mright mbottom)]
     (->> children
       (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
 (defmethod r/render :split
-  [_ attrs & children]
-  (let [split-points (fo/split attrs
-                       (:direction attrs)
-                       (:splits attrs))]
+  [_ {:as attrs :keys [direction splits]} & children]
+  (let [split-attrs (fo/split attrs direction splits)]
     (->> children
       (map-indexed
         (fn [index child]
-          (r/merge-unexisting-attrs child (get split-points index))))
+          (r/merge-unexisting-attrs child (get split-attrs index))))
       (vec))))
 
 (defmethod r/render :grid
@@ -198,7 +196,7 @@
                              :horizontal-align :center
                              :vertical-align :center)
                            (fo/aligned-pattern-wrapper)
-                           (fo/add-margin attrs))
+                           (fo/margin attrs))
         {:keys [cell line outline row col]} pattern
         {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-attrs)]
     [:div

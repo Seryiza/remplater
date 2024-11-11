@@ -12,11 +12,6 @@
     (PDRectangle. x1 y1 width height)))
 
 (defn split-one [attrs coordinate split-size]
-  (comment
-    (split-one {:x1 100 :y1 100 :x2 200 :y2 200} :x #(/ % 3))
-    (split-one {:x1 100 :y1 100 :x2 200 :y2 200} :x 20)
-    (split-one {:x1 100 :y1 100 :x2 200 :y2 200} :y 20))
-
   (let [horizontal? (= :x coordinate)
         [lower-kw upper-kw] (if horizontal?
                               [:x1 :x2]
@@ -39,9 +34,6 @@
       [attrs-2 attrs-1])))
 
 (defn split [attrs coordinate splits]
-  (comment
-    (split {:x1 100 :y1 100 :x2 200 :y2 200} :y [10 20]))
-
   (let [attrs (select-keys attrs [:x1 :y1 :x2 :y2])]
     (->> splits
       (reduce (fn [all next-split]
@@ -77,14 +69,18 @@
        :x2 (:x2 right-top-el)
        :y2 (:y2 right-top-el)})))
 
-(defn add-margin
-  ([attrs margin]
-   (if (map? margin)
-     (add-margin attrs (:margin-left margin) (:margin-top margin) (:margin-right margin) (:margin-bottom margin))
-     (add-margin attrs margin margin margin margin)))
+(defn margin
+  ([attrs margin-units]
+   (if (number? margin-units)
+     (margin attrs margin-units margin-units margin-units margin-units)
+     (margin attrs
+       (or (:margin-left margin-units) 0)
+       (or (:margin-top margin-units) 0)
+       (or (:margin-right margin-units) 0)
+       (or (:margin-bottom margin-units) 0))))
 
   ([attrs margin-vertical margin-horizontal]
-   (add-margin attrs margin-horizontal margin-vertical margin-horizontal margin-vertical))
+   (margin attrs margin-horizontal margin-vertical margin-horizontal margin-vertical))
 
   ([attrs margin-left margin-top margin-right margin-bottom]
    (-> attrs
