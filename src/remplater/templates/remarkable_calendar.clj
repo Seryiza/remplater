@@ -166,7 +166,7 @@
         (when (t/<= right-page-date to-date)
           [daily-layout {:date right-page-date}])]]]]))
 
-(defn remarkable-calendar [{:keys [from-date to-date]}]
+(defn document [{:keys [from-date to-date]}]
   (into [:document {:output "/tmp/remarkable_calendar.pdf"
                     :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
     (concat
@@ -182,6 +182,6 @@
 
 (comment
   (render/render-document
-    (remarkable-calendar
+    (document
       {:from-date (t/new-date 2024 1 1)
        :to-date (t/new-date 2025 1 31)})))

@@ -115,4 +115,4 @@
       (.closePath))))
 
 (defn load-font [document resource-path]
-  (PDType0Font/load document (io/file (io/resource resource-path))))
+  (PDType0Font/load document (io/input-stream (io/resource resource-path))))
