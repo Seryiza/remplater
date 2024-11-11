@@ -50,14 +50,6 @@
   (with-open [pcs (PDPageContentStream. document page PDPageContentStream$AppendMode/APPEND true)]
     (f pcs)))
 
-;; TODO: deprecated?
-(defn in-single-page-content [output-path f]
-  (let [document (make-document)
-        page (make-page {})]
-    (add-page-to-document document page)
-    (with-page-content-stream document page f)
-    (save-document document output-path)))
-
 (defn page->pdrect [page]
   (.getBBox page))
 
