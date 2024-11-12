@@ -1,3 +1,5 @@
+.PHONY: test
+
 JAR_PATH = target/remplater.jar
 
 test:
