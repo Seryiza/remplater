@@ -43,6 +43,21 @@
             {:x1 0 :y1 50 :x2 100 :y2 75}
             {:x1 0 :y1 0 :x2 100 :y2 50}))))
 
+  (testing "horizontal join"
+    (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
+          (pos/join
+            {:x1 0 :y1 0 :x2 50 :y2 100}
+            {:x1 50 :y1 0 :x2 100 :y2 100})))
+    (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
+          (pos/join
+            {:x1 50 :y1 0 :x2 100 :y2 100}
+            {:x1 0 :y1 0 :x2 50 :y2 100})))
+    (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
+          (pos/join
+            {:x1 0 :y1 0 :x2 25 :y2 100}
+            {:x1 25 :y1 0 :x2 50 :y2 100}
+            {:x1 50 :y1 0 :x2 100 :y2 100}))))
+
   (testing "incorrect join"
     (is (nil? (pos/join
                 {:x1 0 :y1 0 :x2 100 :y2 50}

@@ -47,7 +47,6 @@
         [attrs])
       (vec))))
 
-;; TODO: add option for horizontal join
 ;; TODO: add option to ignore borders and ~1px empty space between figs
 (defn- join-two [attrs-1 attrs-2]
   (let [left-bottom-order?
@@ -57,16 +56,26 @@
         [left-bottom-el right-top-el]
         (if left-bottom-order?
           [attrs-1 attrs-2]
-          [attrs-2 attrs-1])]
-    (cond
-      (and
-        (= (:x1 left-bottom-el) (:x1 right-top-el))
-        (= (:x2 left-bottom-el) (:x2 right-top-el))
-        (= (:y2 left-bottom-el) (:y1 right-top-el)))
-      {:x1 (:x1 left-bottom-el)
-       :y1 (:y1 left-bottom-el)
-       :x2 (:x2 right-top-el)
-       :y2 (:y2 right-top-el)})))
+          [attrs-2 attrs-1])
+
+        can-join?
+        (or
+          (and
+            (= (:x1 left-bottom-el) (:x1 right-top-el))
+            (= (:x2 left-bottom-el) (:x2 right-top-el))
+            (= (:y2 left-bottom-el) (:y1 right-top-el)))
+          (and
+            (= (:y1 left-bottom-el) (:y1 right-top-el))
+            (= (:y2 left-bottom-el) (:y2 right-top-el))
+            (= (:x2 left-bottom-el) (:x1 right-top-el))))
+
+        joined
+        {:x1 (:x1 left-bottom-el)
+         :y1 (:y1 left-bottom-el)
+         :x2 (:x2 right-top-el)
+         :y2 (:y2 right-top-el)}]
+    (when can-join?
+      joined)))
 
 (defn join [& attrs-to-join]
   (when (not-empty attrs-to-join)
