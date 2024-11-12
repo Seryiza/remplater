@@ -4,7 +4,7 @@
 
 My PDF templates and code to generate them targeted Remarkable 2.
 
-Feel free to download and generate PDFs, create your templates via clojure, and suggest ideas for new templates in [issues](https://github.com/Seryiza/remplater/issues).
+Feel free to [download](https://github.com/Seryiza/remplater/releases) and generate PDFs, create your templates via clojure, and suggest ideas for new templates in [issues](https://github.com/Seryiza/remplater/issues).
 
 ### Templates
 #### Remarkable-Calendar
