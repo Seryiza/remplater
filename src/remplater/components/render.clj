@@ -152,7 +152,8 @@
                           (zip/node))
           document-node (-> document-node
                           (update-in [1 :fonts] #(load-fonts document %)))
-          output-path (get-in document-node [1 :output])
+          document-attrs (get document-node 1)
+          output-path (:output document-attrs)
           pages (->> tree
                   (doc-tree-zip)
                   (iter-zip)
@@ -160,9 +161,11 @@
                   (map zip/node)
                   (map (fn [page-el]
                          (let [page-attrs (second page-el)
+                               page-size (or (:size page-attrs)
+                                           (:page-size document-attrs))
                                page-obj (pdf/make-page
                                           {:document document
-                                           :size (:size page-attrs)})]
+                                           :size page-size})]
                            (-> page-el
                              (assoc-in [1 :page-obj] page-obj)
                              (update 1 merge (-> page-obj
