@@ -100,7 +100,7 @@
     (let [[block-width block-height] (pos/attrs->sizes attrs)
           text-height font-size
           text-width (* font-size (/ (.getStringWidth font text) 1000))
-          text-offset (or text-offset (/ text-height 4))
+          text-offset (or text-offset (/ text-height 6))
           free-space-x (- block-width text-width)
           free-space-y (- block-height text-height)
           text-pos-x (case halign
