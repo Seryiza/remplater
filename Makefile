@@ -1,4 +1,4 @@
-JAR_PATH = target/remplater-1.0.0.jar
+JAR_PATH = target/remplater.jar
 
 test:
 	clojure -X:test
