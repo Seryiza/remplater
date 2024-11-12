@@ -77,7 +77,11 @@
     (->> [(when border-left
             (make-border-line-fn :left border-left))
           (when border-right
-            (make-border-line-fn :right border-right))]
+            (make-border-line-fn :right border-right))
+          (when border-top
+            (make-border-line-fn :top border-top))
+          (when border-bottom
+            (make-border-line-fn :bottom border-bottom))]
       (filter some?)
       (vec))))
 
