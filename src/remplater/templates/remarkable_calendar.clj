@@ -191,4 +191,4 @@
     (document
       {:from-date (t/new-date 2024 1 1)
        :to-date (t/new-date 2025 1 31)
-       :timeline-labels {6 "12" 18 "XX"}})))
+       :timeline-labels {11 "12"}})))
