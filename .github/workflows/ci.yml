@@ -36,6 +36,9 @@ jobs:
       - name: Build uberjar
         run: make uberjar
 
+      - name: Generate example templates
+        run: make example-templates
+
       - uses: 'marvinpinto/action-automatic-releases@latest'
         with:
           repo_token: '${{ secrets.GITHUB_TOKEN }}'
@@ -45,3 +48,4 @@ jobs:
           files: |
             LICENSE
             target/*.jar
+	    pdfs/*.pdf
