@@ -11,7 +11,7 @@
   (let [[width height] (attrs->sizes attrs)]
     (PDRectangle. x1 y1 width height)))
 
-(defn split-one [attrs coordinate split-size]
+(defn- split-one [attrs coordinate split-size]
   (let [horizontal? (= :x coordinate)
         [lower-kw upper-kw] (if horizontal?
                               [:x1 :x2]
@@ -49,8 +49,7 @@
 
 ;; TODO: add option for horizontal join
 ;; TODO: add option to ignore borders and ~1px empty space between figs
-;; TODO: add join fn like split fn
-(defn join-two [attrs-1 attrs-2]
+(defn- join-two [attrs-1 attrs-2]
   (let [left-bottom-order?
         (and (<= (:x1 attrs-1) (:x1 attrs-2))
           (<= (:y1 attrs-1) (:y1 attrs-2)))
@@ -68,6 +67,14 @@
        :y1 (:y1 left-bottom-el)
        :x2 (:x2 right-top-el)
        :y2 (:y2 right-top-el)})))
+
+(defn join [& attrs-to-join]
+  (when (not-empty attrs-to-join)
+    (->> attrs-to-join
+      (rest)
+      (reduce (fn [joined-attrs curr-attrs]
+                (join-two joined-attrs curr-attrs))
+        (first attrs-to-join)))))
 
 (defn margin
   ([attrs margin-units]

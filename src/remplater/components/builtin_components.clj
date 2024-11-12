@@ -136,6 +136,14 @@
     (->> children
       (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
+(defmethod r/render :join
+  [_ attrs & children]
+  (let [{:keys [joins]} attrs
+        joined-attrs (apply fo/join joins)]
+    (when joins
+      (->> children
+        (mapv #(r/merge-unexisting-attrs % joined-attrs))))))
+
 (defmethod r/render :split
   [_ {:as attrs :keys [direction splits]} & children]
   (let [split-attrs (fo/split attrs direction splits)]

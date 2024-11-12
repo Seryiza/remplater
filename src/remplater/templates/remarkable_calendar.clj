@@ -2,7 +2,6 @@
   (:require
     [clojure.string :as str]
     [remplater.components.builtin-components]
-    [remplater.components.positioning :as fo]
     [remplater.components.render :as render]
     [remplater.pdf :as pdf]
     [tick.core :as t]))
@@ -26,17 +25,17 @@
    :outline [:line {:color (pdf/make-color 100 100 100)}]
    :row (fn [{:as fig :keys [timeline-labels row-index rows]}]
           (when-let [label (get timeline-labels row-index)]
-            (let [this-and-next-rows (fo/join-two (get rows row-index) (get rows (inc row-index)))]
-              [:split (merge this-and-next-rows
-                        {:direction :x :splits [(* 2 (:width cells-pattern))]})
-               [:text {:text label
-                       :font-size 40
-                       :valign :center
-                       :halign :center
-                       :text-offset 10
-                       :children-offset 0}
-                [:margin {:margin -5}
-                 [:rect {:fill-color (pdf/make-color 255 255 255)}]]]])))})
+            [:join {:joins [(get rows row-index)
+                            (get rows (inc row-index))]}
+             [:split {:direction :x :splits [(* 2 (:width cells-pattern))]}
+              [:text {:text label
+                      :font-size 40
+                      :valign :center
+                      :halign :center
+                      :text-offset 10
+                      :children-offset 0}
+               [:margin {:margin -5}
+                [:rect {:fill-color (pdf/make-color 255 255 255)}]]]]]))})
 
 (defn date->units [date]
   {:year (t/format dt-formatter-year date)
@@ -104,7 +103,7 @@
        ;; days grid
        [:grid {:rows 5 :cols 7}
         (fn [attrs]
-         (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index attrs))]
+          (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index attrs))]
             (when day-info
               [[:page-link {:target-page page-name}]
                [:rect (if weekend?
@@ -189,4 +188,4 @@
     (document
       {:from-date (t/new-date 2024 1 1)
        :to-date (t/new-date 2025 1 31)
-       :timeline-labels {11 "12" 18 "XX"}})))
+       :timeline-labels {6 "12" 18 "XX"}})))

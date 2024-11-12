@@ -8,22 +8,6 @@
   (is (= [100 100] (pos/attrs->sizes {:x1 -50 :y1 -50 :x2 50 :y2 50})))
   (is (= [100 100] (pos/attrs->sizes {:x1 50 :y1 50 :x2 -50 :y2 -50}))))
 
-(deftest split-one
-  (testing "split by x (number)"
-    (is (= [{:x1 0 :y1 0 :x2 50 :y2 100}
-            {:x1 50 :y1 0 :x2 100 :y2 100}]
-          (pos/split-one {:x1 0 :y1 0 :x2 100 :y2 100} :x 50))))
-
-  (testing "split by y (number)"
-    (is (= [{:x1 0 :y1 50 :x2 100 :y2 100}
-            {:x1 0 :y1 0 :x2 100 :y2 50}]
-          (pos/split-one {:x1 0 :y1 0 :x2 100 :y2 100} :y 50))))
-
-  (testing "split by x (function)"
-    (is (= [{:x1 0 :y1 0 :x2 50 :y2 100}
-            {:x1 50 :y1 0 :x2 100 :y2 100}]
-          (pos/split-one {:x1 0 :y1 0 :x2 100 :y2 100} :x #(/ % 2))))))
-
 (deftest split
   (testing "split by x (numbers)"
     (is (= [{:x1 0 :y1 0 :x2 25 :y2 100}
@@ -43,22 +27,27 @@
             {:x1 75 :y1 0 :x2 100 :y2 100}]
           (pos/split {:x1 0 :y1 0 :x2 100 :y2 100} :x [50 #(/ % 2)])))))
 
-(deftest join-two
+(deftest join
   (testing "vertical join"
     (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
-          (pos/join-two
+          (pos/join
             {:x1 0 :y1 0 :x2 100 :y2 50}
             {:x1 0 :y1 50 :x2 100 :y2 100})))
     (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
-          (pos/join-two
+          (pos/join
             {:x1 0 :y1 50 :x2 100 :y2 100}
+            {:x1 0 :y1 0 :x2 100 :y2 50})))
+    (is (= {:x1 0 :y1 0 :x2 100 :y2 100}
+          (pos/join
+            {:x1 0 :y1 75 :x2 100 :y2 100}
+            {:x1 0 :y1 50 :x2 100 :y2 75}
             {:x1 0 :y1 0 :x2 100 :y2 50}))))
 
   (testing "incorrect join"
-    (is (nil? (pos/join-two
+    (is (nil? (pos/join
                 {:x1 0 :y1 0 :x2 100 :y2 50}
                 {:x1 0 :y1 200 :x2 100 :y2 400})))
-    (is (nil? (pos/join-two
+    (is (nil? (pos/join
                 {:x1 0 :y1 0 :x2 50 :y2 50}
                 {:x1 100 :y1 100 :x2 200 :y2 20})))))
 
