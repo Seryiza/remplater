@@ -1,6 +1,6 @@
 (ns remplater.components.builtin-components
   (:require
-    [remplater.components.positioning :as fo]
+    [remplater.components.positioning :as pos]
     [remplater.components.render :as r]
     [remplater.pdf :as pdf])
 
@@ -26,7 +26,7 @@
            line-width 1.0}
       :as attrs}
    & children]
-  (let [[width height] (fo/attrs->sizes attrs)
+  (let [[width height] (pos/attrs->sizes attrs)
         fill-color (cond
                      (fn? fill-color) (fill-color attrs)
                      (some? fill-color) fill-color
@@ -46,7 +46,7 @@
 
 (defmethod r/render :circle
   [_ {:as attrs :keys [radius fill-color]} & children]
-  (let [{:keys [x y]} (fo/rect->center attrs)]
+  (let [{:keys [x y]} (pos/rect->center attrs)]
     (doto r/*cs*
       (.setNonStrokingColor fill-color)
       (pdf/draw-circle x y radius)
@@ -73,7 +73,7 @@
    & children]
   (let [make-border-line-fn
         (fn [border-type border-opts]
-          [:line (merge attrs (fo/rect->border-line attrs border-type))])]
+          [:line (merge attrs (pos/rect->border-line attrs border-type))])]
     (->> [(when border-left
             (make-border-line-fn :left border-left))
           (when border-right
@@ -132,21 +132,21 @@
         mtop (or (:margin-top attrs) (:margin attrs) 0)
         mright (or (:margin-right attrs) (:margin attrs) 0)
         mbottom (or (:margin-bottom attrs) (:margin attrs) 0)
-        new-attrs (fo/margin attrs mleft mtop mright mbottom)]
+        new-attrs (pos/margin attrs mleft mtop mright mbottom)]
     (->> children
       (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
 (defmethod r/render :join
   [_ attrs & children]
   (let [{:keys [joins]} attrs
-        joined-attrs (apply fo/join joins)]
+        joined-attrs (apply pos/join joins)]
     (when joins
       (->> children
         (mapv #(r/merge-unexisting-attrs % joined-attrs))))))
 
 (defmethod r/render :split
   [_ {:as attrs :keys [direction splits]} & children]
-  (let [split-attrs (fo/split attrs direction splits)]
+  (let [split-attrs (pos/split attrs direction splits)]
     (->> children
       (map-indexed
         (fn [index child]
@@ -155,7 +155,7 @@
 
 (defmethod r/render :grid
   [_ attrs & children]
-  (let [cells-attrs (fo/grid attrs)]
+  (let [cells-attrs (pos/grid attrs)]
     (->> cells-attrs
       (mapcat (fn [cell-attrs]
                 (->> children
@@ -177,7 +177,7 @@
                       target-page)
         annotations (.getAnnotations r/*page*)
         annotation-link (PDAnnotationLink.)
-        rect (fo/attrs->pdrect attrs)
+        rect (pos/attrs->pdrect attrs)
         go-to-action (PDActionGoTo.)
         destination (PDPageFitWidthDestination.)
         border-style (doto (PDBorderStyleDictionary.)
@@ -193,7 +193,7 @@
 
 (defmethod r/render :aligned-pattern-wrapper
   [_ attrs & children]
-  (into [:margin (fo/aligned-pattern-wrapper attrs)]
+  (into [:margin (pos/aligned-pattern-wrapper attrs)]
     children))
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
@@ -203,10 +203,10 @@
   (let [aligned-attrs (->> (assoc attrs
                              :horizontal-align :center
                              :vertical-align :center)
-                           (fo/aligned-pattern-wrapper)
-                           (fo/margin attrs))
+                           (pos/aligned-pattern-wrapper)
+                           (pos/margin attrs))
         {:keys [cell line outline row col]} pattern
-        {:keys [cells lines outlines rows cols]} (fo/pattern-grid aligned-attrs)]
+        {:keys [cells lines outlines rows cols]} (pos/pattern-grid aligned-attrs)]
     [:div
      (when cell
        (->> cells
