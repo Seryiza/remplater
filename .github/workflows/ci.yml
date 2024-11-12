@@ -44,4 +44,4 @@ jobs:
           title: 'Development Build'
           files: |
             LICENSE
-            target/remplater.jar
+            target/*.jar
