@@ -151,7 +151,7 @@
     (->> cells-attrs
       (mapcat (fn [cell-attrs]
                 (->> children
-                  (mapv #(r/merge-unexisting-attrs % attrs cell-attrs))))))))
+                  (mapv #(r/merge-unexisting-attrs % cell-attrs attrs))))))))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defmethod r/render :page-link
