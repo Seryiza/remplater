@@ -39,6 +39,8 @@ java -jar target/remplater.jar generate remarkable-calendar --start-date=2024-01
 
 You can download already generated PDF files from [releases](https://github.com/Seryiza/remplater/releases).
 
+Also, there's [the Development Prerelease](https://github.com/Seryiza/remplater/releases/tag/latest) with the latest code changes. You can use it too, but it's unstable.
+
 ## How to generate PDFs
 
 Requirements: Java
