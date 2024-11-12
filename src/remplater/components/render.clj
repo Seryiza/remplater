@@ -44,10 +44,35 @@
                    (map normalize-component))]
     (into [component attrs] children)))
 
+(defn get-attr [component & attr-keys]
+  (let [path (into [1] attr-keys)]
+    (get-in component path)))
+
+(defn get-attrs [component]
+  (get component 1 {}))
+
+(defn assoc-attrs [component new-attrs]
+  (assoc component 1 new-attrs))
+
+(defn assoc-attr [component attr-key attr-value]
+  (assoc-in component [1 attr-key] attr-value))
+
+(defn update-attr [component attr-key f & args]
+  (apply update-in component [1 attr-key] f args))
+
+(defn update-attrs [component f & args]
+  (apply update component 1 f args))
+
+(defn merge-attrs [component attrs]
+  (update-attrs component merge attrs))
+
+(defn get-children [component]
+  (drop 2 component))
+
 (defn merge-unexisting-attrs [component & attrs]
   (-> component
     (normalize-component)
-    (update 1 #(apply merge (concat (reverse attrs) [%])))))
+    (update-attrs #(apply merge (concat (reverse attrs) [%])))))
 
 (defn find-first [pred coll]
   (some (fn [x]
@@ -105,9 +130,9 @@
                                  (find-first loc-has-position?)
                                  (zip/node))
             position (-> node-with-position
-                       (second)
+                       (get-attrs)
                        (select-keys [:x1 :y1 :x2 :y2]))
-            node (update node 1 merge position)
+            node (merge-unexisting-attrs node position)
             rendered-node (with-graphic-state #(render-one node))]
         (zip/replace loc rendered-node))
       loc)))
@@ -123,9 +148,9 @@
   (zip/zipper
     (fn [node]
       (and (component? node)
-        (seq (drop 2 node))))
+        (seq (get-children node))))
     (fn [node]
-      (drop 2 node))
+      (get-children node))
     (fn [node children]
       (into [(first node) (second node)] children))
     tree))
@@ -151,30 +176,29 @@
                           (first)
                           (zip/node))
           document-node (-> document-node
-                          (update-in [1 :fonts] #(load-fonts document %)))
-          document-attrs (get document-node 1)
+                          (update-attr :fonts #(load-fonts document %)))
+          document-attrs (get-attrs document-node)
           output-path (:output document-attrs)
           pages (->> tree
                   (doc-tree-zip)
                   (iter-zip)
                   (filter loc-page?)
                   (map zip/node)
-                  (map (fn [page-el]
-                         (let [page-attrs (second page-el)
+                  (map (fn [page-node]
+                         (let [page-attrs (get-attrs page-node)
                                page-size (or (:size page-attrs)
                                            (:page-size document-attrs))
                                page-obj (pdf/make-page
                                           {:document document
                                            :size page-size})]
-                           (-> page-el
-                             (assoc-in [1 :page-obj] page-obj)
-                             (update 1 merge (-> page-obj
-                                               pdf/page->pdrect
-                                               pdf/pdrect->attrs)))))))
-          all-pages-attrs (->> pages
-                            (mapv second))]
+                           (-> page-node
+                             (assoc-attr :page-obj page-obj)
+                             (merge-attrs (-> page-obj
+                                            pdf/page->pdrect
+                                            pdf/pdrect->attrs)))))))
+          all-pages-attrs (mapv get-attrs pages)]
       (doseq [page pages]
-        (let [page-obj (get-in page [1 :page-obj])]
+        (let [page-obj (get-attr page :page-obj)]
           (pdf/with-page-content-stream document page-obj
             (fn [cs]
               (binding [*document* document-node

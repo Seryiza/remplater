@@ -94,11 +94,10 @@
            children-offset 0}}
    & children]
   (let [font (or
-               (get-in r/*document* [1 :fonts font])
-               (get-in r/*document* [1 :fonts :default])
+               (r/get-attr r/*document* :fonts font)
+               (r/get-attr r/*document* :fonts :default)
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
-    (let [block-width (abs (- x2 x1))
-          block-height (abs (- y2 y1))
+    (let [[block-width block-height] (pos/attrs->sizes attrs)
           text-height font-size
           text-width (* font-size (/ (.getStringWidth font text) 1000))
           text-offset (or text-offset (/ text-height 4))
