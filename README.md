@@ -73,7 +73,7 @@ Options:
 
 Requirements: Java, Clojure
 
-There's nothing special in the project. Just start REPL as usual. For the introduction in the codebase, you can read [existing templates](https://github.com/Seryiza/remplater/blob/master/src/remplater/templates/remarkable_calendar.clj).
+Just start REPL as usual. For the introduction in the codebase, you can read [existing templates](https://github.com/Seryiza/remplater/blob/master/src/remplater/templates/remarkable_calendar.clj).
 
 Remplater has automated tests. You can run them inside your editor or command `make test`.
 
