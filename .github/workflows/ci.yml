@@ -48,4 +48,4 @@ jobs:
           files: |
             LICENSE
             target/*.jar
-	    pdfs/*.pdf
+            pdfs/*.pdf
