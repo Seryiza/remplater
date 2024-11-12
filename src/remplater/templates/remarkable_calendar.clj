@@ -56,16 +56,17 @@
       (iterate #(t/>> % step))
       (take-while #(t/<= % to)))))
 
-(defn get-monthly-days [{:keys [date to-date]}]
+(defn get-monthly-days [{:keys [date from-date to-date]}]
   (let [month-start (t/first-day-of-month date)
         calendar-start-day (t/previous-or-same month-start t/MONDAY)
-        calendar-end-day (t/min to-date (t/>> calendar-start-day (t/of-days 34)))]
+        calendar-end-day (t/>> calendar-start-day (t/of-days 34))]
     (->> (range-dates calendar-start-day calendar-end-day)
       (mapv (fn [date]
               {:label (t/format dt-formatter-long-day date)
+               :page-name (get-daily-page-name date)
                :this-month? (= (t/month date) (t/month month-start))
                :weekend? (#{t/SATURDAY t/SUNDAY} (t/day-of-week date))
-               :page-name (get-daily-page-name date)})))))
+               :in-date-range? (t/<= from-date date to-date)})))))
 
 (defn monthly-page [{:as opts :keys [date to-date]}]
   (let [days (get-monthly-days opts)]
@@ -103,8 +104,9 @@
        ;; days grid
        [:grid {:rows 5 :cols 7}
         (fn [attrs]
-          (let [{:as day-info :keys [label page-name this-month? weekend?]} (get days (:index attrs))]
-            (when day-info
+          (let [{:keys [label page-name this-month? weekend? in-date-range?]}
+                (get days (:index attrs))]
+            (when in-date-range?
               [[:page-link {:target-page page-name}]
                [:rect (if weekend?
                         {:fill? true
@@ -174,7 +176,8 @@
     (concat
       (->> (range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
-                [monthly-page {:to-date to-date
+                [monthly-page {:from-date from-date
+                               :to-date to-date
                                :date date}])))
 
       (->> (range-dates from-date to-date (t/of-days 2))
