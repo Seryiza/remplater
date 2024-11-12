@@ -10,12 +10,9 @@ Feel free to download and generate PDFs, create your templates via clojure, and 
 #### Remarkable-Calendar
 inspired by [elainajones](https://github.com/elainajones/remarkable-calendar) ⨯ Hobonichi Techo
 
-| Monthly View | Daily View |
-| ------------ | ---------- |
-| ![Montly View](.github/images/remarkable_calendar_monthly.png) | ![Montly View](.github/images/remarkable_calendar_daily.png) |
 
 <details>
-  <summary><b>Template Details</b></summary>
+  <summary>Template Details</summary>
 
   I love this cool and minimalistic template. I reimplemented it to ensure that this project has enough features.
 
@@ -34,6 +31,10 @@ src/remplater/templates/remarkable_calendar.clj
 java -jar target/remplater.jar generate remarkable-calendar --start-date=2024-01-01 --end-date=2025-01-31 --filename this.pdf --timeline-labels=12:17
 ```
 </details>
+
+| Monthly View | Daily View |
+| ------------ | ---------- |
+| ![Montly View](.github/images/remarkable_calendar_monthly.png) | ![Montly View](.github/images/remarkable_calendar_daily.png) |
 
 ## How to download PDFs
 
