@@ -7,14 +7,6 @@
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
-(def dt-formatter-year (t/formatter "yyyy"))
-(def dt-formatter-short-month (t/formatter "M"))
-(def dt-formatter-long-month (t/formatter "MM"))
-(def dt-formatter-text-month (t/formatter "MMMM"))
-(def dt-formatter-short-day (t/formatter "d"))
-(def dt-formatter-long-day (t/formatter "dd"))
-(def dt-formatter-week-day (t/formatter "EEEE"))
-
 (def cells-pattern
   {:width 45
    :height 45
@@ -38,17 +30,12 @@
                [:margin {:margin -5}
                 [:rect {:fill-color (pdf/make-color 255 255 255)}]]]]]))})
 
-(defn date->units [date]
-  {:year (t/format dt-formatter-year date)
-   :month (t/format dt-formatter-short-month date)
-   :day (t/format dt-formatter-short-day date)})
-
 (defn get-montly-page-name [date]
-  (let [{:keys [year month]} (date->units date)]
+  (let [{:keys [year month]} (dt/date->units date)]
     (str "monthly-page-" year "-" month)))
 
 (defn get-daily-page-name [date]
-  (let [{:keys [year month day]} (date->units date)]
+  (let [{:keys [year month day]} (dt/date->units date)]
     (str "daily-page-" year "-" month "-" day)))
 
 (defn get-monthly-days [{:keys [date from-date to-date]}]
@@ -57,10 +44,10 @@
         calendar-end-day (t/>> calendar-start-day (t/of-days 34))]
     (->> (dt/range-dates calendar-start-day calendar-end-day)
       (mapv (fn [date]
-              {:label (t/format dt-formatter-long-day date)
+              {:label (t/format dt/fmt-dd date)
                :page-name (get-daily-page-name date)
                :this-month? (= (t/month date) (t/month month-start))
-               :weekend? (#{t/SATURDAY t/SUNDAY} (t/day-of-week date))
+               :weekend? (dt/weekend? date)
                :in-date-range? (t/<= from-date date to-date)})))))
 
 (defn monthly-page [{:as opts :keys [date to-date]}]
@@ -79,17 +66,17 @@
                     :width 4}]
           [:margin {:margin-right 30}
            [:split {:direction :y :splits [50]}
-            [:text {:text (t/format dt-formatter-long-month date)
+            [:text {:text (t/format dt/fmt-mm date)
                     :font-size 70
                     :valign :center
                     :halign :right}]
-            [:text {:text (t/format dt-formatter-year date)
+            [:text {:text (t/format dt/fmt-yyyy date)
                     :font-size 50
                     :valign :center
                     :halign :right}]]]]
          [:div {}
           [:margin {:margin-left 40}
-           [:text {:text (t/format dt-formatter-text-month date)
+           [:text {:text (t/format dt/fmt-mmmm date)
                    :text-offset 30
                    :font-size 120
                    :valign :top
@@ -127,19 +114,19 @@
       [:border {:border-right true
                 :width 4}]
       [:margin {:margin-right 20}
-       [:text {:text (t/format dt-formatter-long-day date)
+       [:text {:text (t/format dt/fmt-dd date)
                :font-size 130
                :text-offset 30
                :halign :center
                :valign :center}]]]
      [:margin {:margin-left 30}
       [:split {:direction :y :splits [70]}
-       [:text {:text (-> (t/format dt-formatter-week-day date)
+       [:text {:text (-> (t/format dt/fmt-day-of-week date)
                        (str/upper-case))
                :font-size 70
                :valign :top
                :halign :left}]
-       [:text {:text (t/format dt-formatter-text-month date)
+       [:text {:text (t/format dt/fmt-mmmm date)
                :font-size 50
                :valign :top
                :halign :left}
