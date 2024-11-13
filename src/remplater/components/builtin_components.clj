@@ -45,27 +45,39 @@
     children))
 
 (defmethod r/render :circle
-  [_ {:as attrs :keys [radius fill-color]} & children]
+  [_ {:as attrs
+      :keys [radius stroke? fill? fill-color line-width]
+      :or {line-width 1}} & children]
   (let [{:keys [x y]} (pos/rect->center attrs)]
     (doto r/*cs*
+      (.setLineWidth line-width)
+      (pdf/draw-circle x y radius))
+    (when fill?
       (.setNonStrokingColor fill-color)
-      (pdf/draw-circle x y radius)
-      (.fill)))
+      (.fill r/*cs*))
+    (when stroke?
+      (.stroke r/*cs*)))
   children)
 
 (defmethod r/render :line
-  [_ {:keys [x1 y1 x2 y2 width color cap-style]
+  [_ {:as attrs
+      :keys [x1 y1 x2 y2 width color cap-style line-type dash]
       :or {width 1
            cap-style 0
            color Color/BLACK}}
    & children]
-  (doto r/*cs*
-    (.setLineWidth width)
-    (.setStrokingColor color)
-    (.moveTo x1 y1)
-    (.lineTo x2 y2)
-    (.setLineCapStyle cap-style)
-    (.stroke))
+  (let [{:keys [x1 y1 x2 y2]} (or
+                                (pos/rect->middle-line attrs)
+                                attrs)]
+    (when dash
+      (.setLineDashPattern r/*cs* (float-array (:pattern dash)) (float (:phase dash))))
+    (doto r/*cs*
+      (.setLineWidth width)
+      (.setStrokingColor color)
+      (.moveTo x1 y1)
+      (.lineTo x2 y2)
+      (.setLineCapStyle cap-style)
+      (.stroke)))
   children)
 
 (defmethod r/render :border

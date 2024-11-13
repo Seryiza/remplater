@@ -141,6 +141,17 @@
     {:x (+ x1 (/ width 2))
      :y (+ y1 (/ height 2))}))
 
+(defn rect->middle-line [{:as attrs :keys [line-type x1 y1 x2 y2]}]
+  (let [{:keys [x y]} (rect->center attrs)]
+    (case line-type
+      :horizontal-middle
+      (assoc attrs :y1 y :y2 y)
+
+      :vertical-middle
+      (assoc attrs :x1 x :x2 x)
+
+      nil)))
+
 (defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
   (let [[width height] (attrs->sizes attrs)
         pattern-width (:width pattern)
