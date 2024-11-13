@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [remplater.components.builtin-components]
     [remplater.components.render :as render]
+    [remplater.datetime :as dt]
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
@@ -50,17 +51,11 @@
   (let [{:keys [year month day]} (date->units date)]
     (str "daily-page-" year "-" month "-" day)))
 
-(defn range-dates [from to & [step]]
-  (let [step (or step (t/of-days 1))]
-    (->> from
-      (iterate #(t/>> % step))
-      (take-while #(t/<= % to)))))
-
 (defn get-monthly-days [{:keys [date from-date to-date]}]
   (let [month-start (t/first-day-of-month date)
         calendar-start-day (t/previous-or-same month-start t/MONDAY)
         calendar-end-day (t/>> calendar-start-day (t/of-days 34))]
-    (->> (range-dates calendar-start-day calendar-end-day)
+    (->> (dt/range-dates calendar-start-day calendar-end-day)
       (mapv (fn [date]
               {:label (t/format dt-formatter-long-day date)
                :page-name (get-daily-page-name date)
@@ -173,13 +168,13 @@
                     :page-size pdf/remarkable-2-horizontal-page-size
                     :fonts {:default "fonts/GentiumPlus-6.200/GentiumPlus-Regular.ttf"}}]
     (concat
-      (->> (range-dates from-date to-date (t/of-months 1))
+      (->> (dt/range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
                 [monthly-page {:from-date from-date
                                :to-date to-date
                                :date date}])))
 
-      (->> (range-dates from-date to-date (t/of-days 2))
+      (->> (dt/range-dates from-date to-date (t/of-days 2))
         (mapv (fn [date]
                 [daily-page {:left-page-date date
                              :to-date to-date
