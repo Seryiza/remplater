@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [docopt.core :as docopt]
     [remplater.components.render :as r]
+    [remplater.templates.alpha :as template-alpha]
     [remplater.templates.remarkable-calendar :as template-remarkable-calendar]
     [tick.core :as t])
   (:gen-class))
@@ -12,6 +13,7 @@
 
 Usage:
   remplater generate remarkable-calendar [options] --start-date=<2024-01-01> --end-date=<2025-01-31> [--timeline-labels=<0:12,10:18>]
+  remplater generate alpha [options] --start-date=<2024-01-01> --end-date=<2025-01-31>
   remplater --help
   remplater --version
 
@@ -21,7 +23,7 @@ Options:
   --filename=<filename>   Output filename")
 
 (defn some-key [arg-map & arg-keys]
-  (some #(when (contains? arg-map %) %) arg-keys))
+  (some #(when (get arg-map %) %) arg-keys))
 
 (defn parse-date [text]
   (t/parse-date text (t/formatter "yyyy-MM-dd")))
@@ -37,13 +39,18 @@ Options:
         {}))))
 
 (defn generate-template [arg-map]
-  (let [template-name (some-key arg-map "remarkable-calendar")
+  (let [template-name (some-key arg-map
+                        "remarkable-calendar"
+                        "alpha")
         custom-filename (get arg-map "--filename")
         document (case template-name
                    "remarkable-calendar" (template-remarkable-calendar/document
                                            {:from-date (parse-date (get arg-map "--start-date"))
                                             :to-date (parse-date (get arg-map "--end-date"))
-                                            :timeline-labels (parse-timeline-labels (get arg-map "--timeline-labels"))}))]
+                                            :timeline-labels (parse-timeline-labels (get arg-map "--timeline-labels"))})
+                   "alpha" (template-alpha/document
+                             {:from-date (t/new-date 2024 11 1)
+                              :to-date (t/new-date 2024 11 30)}))]
     (cond-> document
       custom-filename (assoc-in [1 :output] custom-filename)
       :always (r/render-document))))
