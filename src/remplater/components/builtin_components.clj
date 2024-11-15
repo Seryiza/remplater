@@ -234,9 +234,8 @@
 (defmethod r/render :pattern-grid
   [_ {:as attrs :keys [pattern x1 y1 x2 y2]}
    & children]
-  (let [aligned-attrs (->> (assoc attrs
-                             :horizontal-align :center
-                             :vertical-align :center)
+  (let [aligned-attrs (->> (merge {:horizontal-align :center
+                                   :vertical-align :center} attrs)
                            (pos/aligned-pattern-wrapper)
                            (pos/margin attrs))
         {:keys [cell line outline row col]} pattern

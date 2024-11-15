@@ -194,10 +194,19 @@
 
 (defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
   (let [[width height] (attrs->sizes attrs)
-        pattern-width (:width pattern)
-        pattern-height (:height pattern)
+        pattern-width (or (->abs-unit width (:width pattern))
+                        width)
+        pattern-height (or (->abs-unit height (:height pattern))
+                         height)
         used-patterns-x (quot width pattern-width)
         used-patterns-y (quot height pattern-height)
+        {:keys [max-cols max-rows]} pattern
+        used-patterns-x (if max-cols
+                          (min max-cols used-patterns-x)
+                          used-patterns-x)
+        used-patterns-y (if max-rows
+                          (min max-rows used-patterns-y)
+                          used-patterns-y)
         splits-x (vec (repeat (dec used-patterns-x) pattern-width))
         splits-y (vec (repeat (dec used-patterns-y) pattern-height))
         cols (->> (split attrs :x splits-x)
@@ -223,12 +232,13 @@
      :outlines outlines}))
 
 ;; TODO: add align option
-(defn aligned-pattern-wrapper [{:keys [x1 y1 x2 y2 pattern
-                                       horizontal-align vertical-align]}]
-  (let [box-width (abs (- x2 x1))
-        box-height (abs (- y2 y1))
-        pattern-width (:width pattern)
-        pattern-height (:height pattern)
+(defn aligned-pattern-wrapper [{:as attrs :keys [x1 y1 x2 y2 pattern
+                                                 horizontal-align vertical-align]}]
+  (let [[box-width box-height] (attrs->sizes attrs)
+        pattern-width (or (->abs-unit box-width (:width pattern))
+                        box-width)
+        pattern-height (or (->abs-unit box-height (:height pattern))
+                         box-height)
         used-patterns-x (quot box-width pattern-width)
         used-patterns-y (quot box-height pattern-height)
         used-space-x (* pattern-width used-patterns-x)
