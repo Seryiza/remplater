@@ -127,18 +127,6 @@
        (update :y1 + margin-bottom)
        (update :y2 - margin-top)))))
 
-(defn grid [attrs]
-  (let [{:keys [x1 y1 x2 y2 rows cols]} attrs
-        x-delta (/ (- x2 x1) cols)
-        y-delta (/ (- y2 y1) rows)
-        x-slices (repeat (dec cols) x-delta)
-        y-slices (repeat (dec rows) y-delta)
-        cells (->> (split attrs :y y-slices)
-                (map #(split % :x x-slices))
-                (flatten)
-                (map-indexed #(assoc %2 :index %1)))]
-    cells))
-
 (defn rect->border-line [attrs side]
   (let [{:keys [x1 y1 x2 y2]} attrs
         line (case side
@@ -174,6 +162,36 @@
 
       nil)))
 
+(defn grid [attrs]
+  (let [{:keys [x1 y1 x2 y2 rows cols cell-size]} attrs
+        [width height] (attrs->sizes attrs)
+        x-delta (/ width cols)
+        y-delta (/ height rows)
+        splits-x (repeat (dec cols) x-delta)
+        splits-y (repeat (dec rows) y-delta)
+        cols (->> (split attrs :x splits-x)
+               (map-indexed #(assoc %2 :col-index %1))
+               (vec))
+        lines-x (->> cols
+                  (map #(rect->border-line % :right))
+                  (drop-last))
+        rows (->> (split attrs :y splits-y)
+               (map-indexed #(assoc %2 :row-index %1))
+               (vec))
+        lines-y (->> rows
+                  (map #(rect->border-line % :bottom))
+                  (drop-last))
+        outlines (vals (rect->border-lines attrs))
+        cells (->> (split attrs :y splits-y)
+                (map #(split % :x splits-x))
+                (flatten)
+                (map-indexed #(assoc %2 :index %1)))]
+    {:rows rows
+     :cols cols
+     :lines (concat lines-y lines-x)
+     :outlines outlines
+     :cells cells}))
+
 (defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
   (let [[width height] (attrs->sizes attrs)
         pattern-width (:width pattern)
@@ -195,9 +213,9 @@
                   (map #(rect->border-line % :bottom))
                   (drop-last))
         outlines (vals (rect->border-lines attrs))
-        cells (grid (assoc attrs
-                      :rows used-patterns-y
-                      :cols used-patterns-x))]
+        cells (:cells (grid (assoc attrs
+                              :rows used-patterns-y
+                              :cols used-patterns-x)))]
     {:cells cells
      :lines (concat lines-y lines-x)
      :rows rows

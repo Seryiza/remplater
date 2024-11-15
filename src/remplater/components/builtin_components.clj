@@ -165,12 +165,35 @@
       (vec))))
 
 (defmethod r/render :grid
-  [_ attrs & children]
-  (let [cells-attrs (pos/grid attrs)]
-    (->> cells-attrs
-      (mapcat (fn [cell-attrs]
-                (->> children
-                  (mapv #(r/merge-unexisting-attrs % cell-attrs attrs))))))))
+  [_ {:as attrs :keys [cell line outline row col]} & children]
+  (let [{:keys [cells lines outlines rows cols]} (pos/grid attrs)]
+    [:div
+     (when cell
+       (->> cells
+         (map #(r/merge-unexisting-attrs cell % attrs))
+         (into [:div])))
+     (when (not-empty children)
+       (->> cells
+         (mapcat (fn [cell-attrs]
+                   (->> children
+                     (mapv #(r/merge-unexisting-attrs % cell-attrs attrs)))))
+         (into [:div])))
+     (when line
+       (->> lines
+         (map #(r/merge-unexisting-attrs line % attrs))
+         (into [:div])))
+     (when outline
+       (->> outlines
+         (map #(r/merge-unexisting-attrs outline % {:cap-style 2} attrs))
+         (into [:div])))
+     (when row
+       (->> rows
+         (map #(r/merge-unexisting-attrs row % {:rows rows} attrs))
+         (into [:div])))
+     (when col
+       (->> cols
+         (map #(r/merge-unexisting-attrs col % {:cols cols} attrs))
+         (into [:div])))]))
 
 ;; TODO: add link-type to change PDPageFitWidthDestination
 (defmethod r/render :page-link
