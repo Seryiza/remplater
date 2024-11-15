@@ -7,41 +7,41 @@
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
-(def timeline-pattern
-  {:width 150
-   :height 75
-   :row (fn [{:keys [row-index rows start-hour]}]
-          (let [hour? (even? row-index)
-                hour (rem (+ start-hour (/ row-index 2)) 24)]
-            [:split {:direction :x :splits [50 #(- % (/ (:width timeline-pattern) 2))]}
-             [:div (when hour?
-                     [:margin {:margin-right 10}
-                      [:text {:text (str hour)
-                              :font-size 25
-                              :valign :center
-                              :halign :right}]])]
-             [:line {:color (if hour?
-                              (pdf/make-color 100 100 100)
-                              (pdf/make-color 0 0 0))
-                     :line-type :horizontal-middle
-                     :dash (when-not hour?
-                             {:pattern [1 3]
-                              :phase 0})}]]))
-   :col (fn [{:keys [col-index cols]}]
-          [:margin {:margin-top (/ (:height timeline-pattern) 2)
-                    :margin-bottom (/ (:height timeline-pattern) 2)}
-           [:line {:line-type :vertical-middle}]])})
+#_(def timeline-pattern
+    {:width 150
+     :height 75
+     :row (fn [{:keys [row-index rows start-hour]}]
+            (let [hour? (even? row-index)
+                  hour (rem (+ start-hour (/ row-index 2)) 24)]
+              [:split {:direction :x :splits [50 #(- % (/ (:width timeline-pattern) 2))]}
+               [:div (when hour?
+                       [:margin {:margin-right 10}
+                        [:text {:text (str hour)
+                                :font-size 25
+                                :valign :center
+                                :halign :right}]])]
+               [:line {:color (if hour?
+                                (pdf/make-color 100 100 100)
+                                (pdf/make-color 0 0 0))
+                       :line-type :horizontal-middle
+                       :dash (when-not hour?
+                               {:pattern [1 3]
+                                :phase 0})}]]))
+     :col (fn [{:keys [col-index cols]}]
+            [:margin {:margin-top (/ (:height timeline-pattern) 2)
+                      :margin-bottom (/ (:height timeline-pattern) 2)}
+             [:line {:line-type :vertical-middle}]])})
 
-(def cells-pattern
-  {:width 45
-   :height 45
-   :line (fn [{:keys [col-index row-index strong-line-rows]}]
-           (let [strong-line? (contains? strong-line-rows row-index)]
-             [:line {:color (if strong-line?
-                                (pdf/make-color 0 0 0)
-                                (pdf/make-color 100 100 100))
-                     :width (if strong-line? 4 1)}]))
-   :outline [:line {:color (pdf/make-color 100 100 100)}]})
+#_(def cells-pattern
+    {:width 45
+     :height 45
+     :line (fn [{:keys [col-index row-index strong-line-rows]}]
+             (let [strong-line? (contains? strong-line-rows row-index)]
+               [:line {:color (if strong-line?
+                                  (pdf/make-color 0 0 0)
+                                  (pdf/make-color 100 100 100))
+                       :width (if strong-line? 4 1)}]))
+     :outline [:line {:color (pdf/make-color 100 100 100)}]})
 
 (defn get-month-page-name [date]
   (str "month-page-" (t/format dt/fmt-yyyy date) "-" (t/format dt/fmt-mm date)))
@@ -72,158 +72,239 @@
                :this-month? (= (t/month date) (t/month month-start))
                :weekend? (dt/weekend? date)})))))
 
-(defn page-layout [attrs & children]
-  [:margin {:margin-left 104}
-   [:split {:direction :y :splits [104]}
+#_(defn page-layout [attrs & children]
+    [:margin {:margin-left 104}
+     [:split {:direction :y :splits [104]}
+      [:div
+       [:split {:direction :x :splits [1000]}
+        [:div (:header attrs)]
+        [:div (:header-end attrs)]]]
+      (into [:div] children)]])
+
+#_(defn header-button [attrs & children]
     [:div
-     [:split {:direction :x :splits [1000]}
-      [:div (:header attrs)]
-      [:div (:header-end attrs)]]]
-    (into [:div] children)]])
+     (when-let [page-link (:page-link attrs)]
+       [:page-link {:target-page page-link}])
 
-(defn header-button [attrs & children]
-  [:div
-   (when-let [page-link (:page-link attrs)]
-     [:page-link {:target-page page-link}])
+     [:margin {:margin 30}
+      [:circle {:fill? false
+                :stroke? true
+                :line-width 4
+                :radius 20}
+       [:text {:text (:title attrs)
+               :font-size 30
+               :valign :center
+               :halign :center}]]]])
 
-   [:margin {:margin 30}
-    [:circle {:fill? false
-              :stroke? true
-              :line-width 4
-              :radius 20}
-     [:text {:text (:title attrs)
-             :font-size 30
-             :valign :center
-             :halign :center}]]]])
+#_(defn header-buttons [attrs & children]
+    (let [splits (repeat (count children) 100)]
+      (into [:split {:direction :x :splits splits}] children)))
 
-(defn header-buttons [attrs & children]
-  (let [splits (repeat (count children) 100)]
-    (into [:split {:direction :x :splits splits}] children)))
+#_(defn daily-page [{:keys [date]}]
+    [:page {:name (get-day-page-name date)}
+     [page-layout {:header [:split {:direction :x :splits [500]}
+                            [:text {:text (t/format dt/fmt-mmmm date)
+                                    :font-size 80
+                                    :valign :center
+                                    :halign :left}
+                             [:page-link {:target-page (get-month-page-name date)}]]
+                            [:text {:text (t/format dt/fmt-dd date)
+                                    :font-size 80
+                                    :valign :center
+                                    :halign :left}]]
+                   :header-end [header-buttons
+                                [header-button {:title "n"
+                                                :page-link (get-notes-index-page-name 0)}]]}
+      [:split {:direction :x :splits [#(/ % 2)]}
+       [:margin {:margin-top 40
+                 :margin-bottom 40}
+        [:pattern-grid {:pattern cells-pattern
+                        :strong-line-rows #{}}]]
+       [:pattern-grid {:pattern timeline-pattern
+                       :start-hour 10}]]]])
 
-(defn daily-page [{:keys [date]}]
-  [:page {:name (get-day-page-name date)}
-   [page-layout {:header [:split {:direction :x :splits [500]}
-                          [:text {:text (t/format dt/fmt-mmmm date)
-                                  :font-size 80
-                                  :valign :center
-                                  :halign :left}
-                           [:page-link {:target-page (get-month-page-name date)}]]
-                          [:text {:text (t/format dt/fmt-dd date)
-                                  :font-size 80
-                                  :valign :center
-                                  :halign :left}]]
-                 :header-end [header-buttons
-                              [header-button {:title "n"
-                                              :page-link (get-notes-index-page-name 0)}]]}
-    [:split {:direction :x :splits [#(/ % 2)]}
-     [:margin {:margin-top 40
-               :margin-bottom 40}
-      [:pattern-grid {:pattern cells-pattern
-                      :strong-line-rows #{}}]]
-     [:pattern-grid {:pattern timeline-pattern
-                     :start-hour 10}]]]])
+#_(defn monthly-page [{:keys [date]}]
+    (let [monthly-dates (get-monthly-days {:date date})]
+      [:page {:name (get-month-page-name date)}
+       [page-layout {:header [:text {:text (str
+                                             (t/format dt/fmt-mmmm date)
+                                             " "
+                                             (t/format dt/fmt-yyyy date))
+                                     :font-size 80
+                                     :valign :center
+                                     :halign :left}]
+                     :header-end [header-buttons
+                                  [header-button {:title "i"}]
+                                  [header-button {:title "n"}]]}
+        [:split {:direction :y :splits [1000]}
+         [:margin {:margin 40}
+          [:grid {:rows 6 :cols 7}
+           (fn [{:keys [index]}]
+             (let [{:keys [label page-name this-month?]} (get monthly-dates index)]
+               (when this-month?
+                 [:div
+                  [:page-link {:target-page page-name}]
+                  [:rect {:fill? false
+                          :stroke? true
+                          :line-width 3}]
+                  [:margin {:margin 10}
+                   [:text {:text label
+                           :font-size 40
+                           :valign :top
+                           :halign :left}]]])))]]
+         [:margin {:margin 40}
+          [:pattern-grid {:pattern cells-pattern}]]]]]))
 
-(defn monthly-page [{:keys [date]}]
-  (let [monthly-dates (get-monthly-days {:date date})]
-    [:page {:name (get-month-page-name date)}
-     [page-layout {:header [:text {:text (str
-                                           (t/format dt/fmt-mmmm date)
-                                           " "
-                                           (t/format dt/fmt-yyyy date))
+#_(defn notes-index [{:keys [index-page]}]
+    (let [start-note-index (* 50 index-page)
+          max-note-index (+ 50 start-note-index)]
+      [:page {:name (get-notes-index-page-name index-page)
+              :aliases (->> (range start-note-index max-note-index)
+                         (mapv #(get-notes-index-alias-by-note %)))}
+       [page-layout {:header [:text {:text "Notes"
+                                     :font-size 80
+                                     :valign :center
+                                     :halign :left}]}
+        [:margin {:margin 20}
+         [:grid {:rows 25 :cols 2}
+          (fn [{:keys [index]}]
+            [:div
+             [:page-link {:target-page (get-notes-page-name (+ index start-note-index))}]
+             [:split {:direction :x :splits [60 60]}
+              [:rect {:fill? false
+                      :stroke? true}
+               [:text {:text (str (+ index start-note-index 1))
+                       :font-size 30
+                       :halign :center
+                       :valign :center}]]
+              [:rect {:fill? false
+                      :stroke? true}]
+              [:margin {:margin-right 50}
+               [:rect {:fill? false
+                       :stroke? true}]]]])]]]]))
+
+#_(defn notes-page [{:keys [note-index]}]
+    [:page {:name (get-notes-page-name note-index)}
+     [page-layout {:header [:div
+                            [:page-link {:target-page (get-notes-index-alias-by-note note-index)}]
+                            [:text {:text (str "Note " (inc note-index))
+                                    :font-size 80
+                                    :valign :center
+                                    :halign :left}]]
+                   :header-end [header-buttons
+                                [header-button {:title "n"}]]}
+      [:margin {:margin 40}
+       [:pattern-grid {:pattern cells-pattern}]]]])
+
+#_(defn monthly-inbox-page [attrs]
+    [:page {:name "montly-inbox"}
+     [page-layout {:header [:text {:text "September Inbox"
                                    :font-size 80
                                    :valign :center
                                    :halign :left}]
                    :header-end [header-buttons
-                                [header-button {:title "i"}]
                                 [header-button {:title "n"}]]}
-      [:split {:direction :y :splits [1000]}
-       [:margin {:margin 40}
-        [:grid {:rows 6 :cols 7}
-         (fn [{:keys [index]}]
-           (let [{:keys [label page-name this-month?]} (get monthly-dates index)]
-             (when this-month?
+      [:margin {:margin 40}
+       [:pattern-grid {:pattern cells-pattern}]]]])
+
+(defn light-line [attrs & children]
+  [:line {:dash {:pattern [1]
+                 :phase 1}}])
+
+(def line-pattern
+  {:height 50
+   :max-rows 31
+   :line light-line})
+
+(def timegrid-pattern
+  (merge line-pattern
+    {:width "25%"}))
+
+(def timeline-pattern
+  (merge line-pattern
+    {:line (fn [{:keys [row-index]}]
+             (let [hour? (and (even? row-index)
+                           (< 1 row-index))
+                   hour (+ 9 (/ row-index 2))]
                [:div
-                [:page-link {:target-page page-name}]
-                [:rect {:fill? false
-                        :stroke? true
-                        :line-width 3}]
-                [:margin {:margin 10}
-                 [:text {:text label
+                [light-line {}]
+                (when hour?
+                  [:margin {:margin-right 50
+                            :margin-bottom 1}
+                   [:text {:text (str hour)
+                           :font-size 20
+                           :valign :center
+                           :halign :right}
+                    [:rect {:fill-color (pdf/make-color 255 255 255)}]]])]))}))
+
+(defn double-vertical-line [attrs]
+  [:div
+   [:border {:border-right {:width 1}}]
+   [:margin {:margin-right 10}
+    [:border {:border-right {:width 1}}]]])
+
+(defn single-horizontal-line [attrs]
+  [:border {:border-bottom {:width 1}}])
+
+(defn page-layout [attrs & children]
+  (let [split-y 250]
+    [:div
+     [:split {:direction :x :splits [300]}
+      [:split {:direction :y :splits [split-y]}
+       [:div
+        [double-vertical-line {}]
+        [single-horizontal-line {}]
+        (:top-left attrs)]
+       [:div
+        [double-vertical-line {}]
+        (:bottom-left attrs)]]
+      [:split {:direction :y :splits [split-y]}
+       [:div
+        [single-horizontal-line {}]
+        (:top-right attrs)]
+       [:div
+        (:bottom-right attrs)]]]]))
+
+(defn day-page [{:as attrs :keys [date]}]
+  [:page {:name "day-page"}
+   [page-layout
+    {:top-left [:margin {:margin-top 80
+                         :margin-right 40}
+                [:split {:direction :y :splits [90]}
+                 [:text {:text "16"
+                         :font-size 80
+                         :halign :right}]
+                 [:text {:text "NOV"
                          :font-size 40
-                         :valign :top
-                         :halign :left}]]])))]]
-       [:margin {:margin 40}
-        [:pattern-grid {:pattern cells-pattern}]]]]]))
-
-(defn notes-index [{:keys [index-page]}]
-  (let [start-note-index (* 50 index-page)
-        max-note-index (+ 50 start-note-index)]
-    [:page {:name (get-notes-index-page-name index-page)
-            :aliases (->> (range start-note-index max-note-index)
-                       (mapv #(get-notes-index-alias-by-note %)))}
-     [page-layout {:header [:text {:text "Notes"
-                                   :font-size 80
-                                   :valign :center
-                                   :halign :left}]}
-      [:margin {:margin 20}
-       [:grid {:rows 25 :cols 2}
-        (fn [{:keys [index]}]
-          [:div
-           [:page-link {:target-page (get-notes-page-name (+ index start-note-index))}]
-           [:split {:direction :x :splits [60 60]}
-            [:rect {:fill? false
-                    :stroke? true}
-             [:text {:text (str (+ index start-note-index 1))
-                     :font-size 30
-                     :halign :center
-                     :valign :center}]]
-            [:rect {:fill? false
-                    :stroke? true}]
-            [:margin {:margin-right 50}
-             [:rect {:fill? false
-                     :stroke? true}]]]])]]]]))
-
-(defn notes-page [{:keys [note-index]}]
-  [:page {:name (get-notes-page-name note-index)}
-   [page-layout {:header [:div
-                          [:page-link {:target-page (get-notes-index-alias-by-note note-index)}]
-                          [:text {:text (str "Note " (inc note-index))
-                                  :font-size 80
-                                  :valign :center
-                                  :halign :left}]]
-                 :header-end [header-buttons
-                              [header-button {:title "n"}]]}
-    [:margin {:margin 40}
-     [:pattern-grid {:pattern cells-pattern}]]]])
-
-(defn monthly-inbox-page [attrs]
-  [:page {:name "montly-inbox"}
-   [page-layout {:header [:text {:text "September Inbox"
-                                 :font-size 80
-                                 :valign :center
-                                 :halign :left}]
-                 :header-end [header-buttons
-                              [header-button {:title "n"}]]}
-    [:margin {:margin 40}
-     [:pattern-grid {:pattern cells-pattern}]]]])
+                         :halign :right}]]]
+     :bottom-left [:div
+                   [:pattern-grid {:pattern timeline-pattern
+                                   :vertical-align :top}]]
+     :bottom-right [:div
+                    [:pattern-grid {:pattern timegrid-pattern
+                                    :vertical-align :top}]]}]
+   #_[:margin {:margin-left 104
+               :margin-top 104}
+      [:rect]]])
 
 (defn document [{:keys [from-date to-date]}]
   (into [:document {:output "/tmp/alpha.pdf"
                     :page-size pdf/remarkable-2-page-size
                     :fonts {:default "fonts/Alice-Regular.ttf"}}]
     (concat
-      (->> (dt/range-dates from-date to-date (t/of-months 1))
-        (mapv (fn [date]
-                [monthly-page {:date date}])))
-      (->> (range 2)
-        (mapv (fn [index]
-                [notes-index {:index-page index}])))
-      (->> (range (* 2 50))
-        (mapv (fn [note-index]
-                [notes-page {:note-index note-index}])))
-      (->> (dt/range-dates from-date to-date (t/of-days 1))
-        (mapv (fn [date]
-                [daily-page {:date date}]))))))
+      [[day-page {}]]
+      #_#_#_#_(->> (dt/range-dates from-date to-date (t/of-months 1))
+                (mapv (fn [date]
+                        [monthly-page {:date date}])))
+            (->> (range 2)
+              (mapv (fn [index]
+                      [notes-index {:index-page index}])))
+          (->> (range (* 2 50))
+            (mapv (fn [note-index]
+                    [notes-page {:note-index note-index}])))
+        (->> (dt/range-dates from-date to-date (t/of-days 1))
+          (mapv (fn [date]
+                  [daily-page {:date date}]))))))
 
 (comment
   (render/render-document
