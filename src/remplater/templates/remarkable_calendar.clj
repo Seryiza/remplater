@@ -62,8 +62,7 @@
                  :margin-bottom 40}
         [:split {:direction :x :splits [#(/ % 7)]}
          [:div {}
-          [:border {:border-right true
-                    :width 4}]
+          [:border {:border-right {:width 4}}]
           [:margin {:margin-right 30}
            [:split {:direction :y :splits [50]}
             [:text {:text (t/format dt/fmt-mm date)
@@ -111,8 +110,7 @@
    [:split {:direction :y :splits [150]}
     [:split {:direction :x :splits [(* 4 (:width cells-pattern))]}
      [:div {}
-      [:border {:border-right true
-                :width 4}]
+      [:border {:border-right {:width 4}}]
       [:margin {:margin-right 20}
        [:text {:text (t/format dt/fmt-dd date)
                :font-size 130

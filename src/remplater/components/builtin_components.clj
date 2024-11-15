@@ -85,7 +85,7 @@
    & children]
   (let [make-border-line-fn
         (fn [border-type border-opts]
-          [:line (merge attrs (pos/rect->border-line attrs border-type))])]
+          [:line (merge attrs (pos/rect->border-line attrs border-type) border-opts)])]
     (->> [(when border-left
             (make-border-line-fn :left border-left))
           (when border-right
