@@ -1,6 +1,23 @@
 (ns remplater.components.positioning
+  (:require
+    [clojure.string :as str])
   (:import
     [org.apache.pdfbox.pdmodel.common PDRectangle]))
+
+(defn percent-units? [units]
+  (and
+    (string? units)
+    (not (str/blank? units))
+    (str/ends-with? units "%")))
+
+(defn percent-units->number [units]
+  (let [number (str/replace units "%" "")]
+    (/ (Integer/parseInt number) 100)))
+
+(defn ->abs-unit [total-size units]
+  (if (percent-units? units)
+    (* total-size (percent-units->number units))
+    units))
 
 (defn attrs->sizes [{:keys [x1 y1 x2 y2]}]
   (let [width (abs (- x2 x1))
@@ -90,20 +107,25 @@
    (if (number? margin-units)
      (margin attrs margin-units margin-units margin-units margin-units)
      (margin attrs
-       (or (:margin-left margin-units) 0)
-       (or (:margin-top margin-units) 0)
-       (or (:margin-right margin-units) 0)
-       (or (:margin-bottom margin-units) 0))))
+       (or (:margin margin-units) (:margin-left margin-units) 0)
+       (or (:margin margin-units) (:margin-top margin-units) 0)
+       (or (:margin margin-units) (:margin-right margin-units) 0)
+       (or (:margin margin-units) (:margin-bottom margin-units) 0))))
 
   ([attrs margin-vertical margin-horizontal]
    (margin attrs margin-horizontal margin-vertical margin-horizontal margin-vertical))
 
   ([attrs margin-left margin-top margin-right margin-bottom]
-   (-> attrs
-     (update :x1 + margin-left)
-     (update :x2 - margin-right)
-     (update :y1 + margin-bottom)
-     (update :y2 - margin-top))))
+   (let [[width height] (attrs->sizes attrs)
+         margin-left (->abs-unit width margin-left)
+         margin-right (->abs-unit width margin-right)
+         margin-top (->abs-unit height margin-top)
+         margin-bottom (->abs-unit height margin-bottom)]
+     (-> attrs
+       (update :x1 + margin-left)
+       (update :x2 - margin-right)
+       (update :y1 + margin-bottom)
+       (update :y2 - margin-top)))))
 
 (defn grid [attrs]
   (let [{:keys [x1 y1 x2 y2 rows cols]} attrs

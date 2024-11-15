@@ -143,11 +143,7 @@
 
 (defmethod r/render :margin
   [_ attrs & children]
-  (let [mleft (or (:margin-left attrs) (:margin attrs) 0)
-        mtop (or (:margin-top attrs) (:margin attrs) 0)
-        mright (or (:margin-right attrs) (:margin attrs) 0)
-        mbottom (or (:margin-bottom attrs) (:margin attrs) 0)
-        new-attrs (pos/margin attrs mleft mtop mright mbottom)]
+  (let [new-attrs (pos/margin attrs attrs)]
     (->> children
       (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
