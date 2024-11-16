@@ -5,10 +5,13 @@
 (def fmt-yyyy (t/formatter "yyyy"))
 (def fmt-m (t/formatter "M"))
 (def fmt-mm (t/formatter "MM"))
+(def fmt-mmm (t/formatter "MMM"))
 (def fmt-mmmm (t/formatter "MMMM"))
+(def fmt-w (t/formatter "w"))
 (def fmt-d (t/formatter "d"))
 (def fmt-dd (t/formatter "dd"))
 (def fmt-day-of-week (t/formatter "EEEE"))
+(def fmt-short-day-of-week (t/formatter "EE"))
 
 (defn range-dates [from to & [step]]
   (let [step (or step (t/of-days 1))]

@@ -237,7 +237,7 @@
                 [light-line {}]
                 (when hour?
                   [:padding {:padding-right 70
-                             :padding-bottom 1}
+                             :padding-bottom 0}
                    [:text {:text (str hour)
                            :font-size 25
                            :valign :center
@@ -275,31 +275,55 @@
 (defn day-page [{:as attrs :keys [date]}]
   [:page {:name "day-page"}
    [page-layout
-    {:top-left [:padding {:padding-top 80
-                          :padding-right 40}
-                [:split {:direction :y :splits [90]}
-                 [:text {:text "16"
-                         :font-size 80
-                         :halign :right}]
-                 [:text {:text "NOV"
-                         :font-size 40
-                         :halign :right}]]]
-     :bottom-left [:div
-                   [:pattern-grid {:pattern timeline-pattern
-                                   :vertical-align :top}]]
-     :bottom-right [:div
-                    [:pattern-grid {:pattern timegrid-pattern
-                                    :vertical-align :top}]]}]
-   #_[:margin {:margin-left 104
-               :margin-top 104}
-      [:rect]]])
+    {:top-left
+     [:padding {:padding-top 90
+                :padding-left 130}
+      [:split {:direction :y :splits [100 40]}
+       [:text {:text (t/format dt/fmt-dd date)
+               :font-size 80
+               :halign :center}]
+       [:text {:text (str
+                       (str/upper-case
+                         (t/format dt/fmt-mmm date))
+                       ">")
+               :font-size 35
+               :halign :center}]]]
+
+     :top-right
+     [:split {:direction :x :splits [#(* % 3/4)]}
+      [:padding {:padding-top 90
+                 :padding-left 30}
+       [:split {:direction :y :splits [100]}
+        [:text {:text (str/upper-case
+                        (t/format dt/fmt-day-of-week date))
+                :font-size 80
+                :halign :left}]
+        [:padding {:padding-left 5}
+         [:text {:text (str "WEEK " (t/format dt/fmt-w date) ">")
+                 :font-size 35
+                 :halign :left}]]]]
+      [:padding {:padding-top 190}
+       [:text {:text "NOTES>"
+               :font-size 35
+               :halign :left}]]]
+
+     :bottom-left
+     [:div
+      [:pattern-grid {:pattern timeline-pattern
+                      :vertical-align :top}]]
+
+     :bottom-right
+     [:div
+      [:pattern-grid {:pattern timegrid-pattern
+                      :vertical-align :top}]]}]])
 
 (defn document [{:keys [from-date to-date]}]
   (into [:document {:output "/tmp/alpha.pdf"
                     :page-size pdf/remarkable-2-page-size
-                    :fonts {:default "fonts/Alice-Regular.ttf"}}]
+                    :fonts {:default "fonts/Iosevka-Regular.ttf"
+                            :bold "fonts/Iosevka-Bold.ttf"}}]
     (concat
-      [[day-page {}]]
+      [[day-page {:date (t/new-date 2024 11 17)}]]
       #_#_#_#_(->> (dt/range-dates from-date to-date (t/of-months 1))
                 (mapv (fn [date]
                         [monthly-page {:date date}])))
