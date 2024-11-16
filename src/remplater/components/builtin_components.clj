@@ -20,43 +20,52 @@
   children)
 
 (defmethod r/render :rect
-  [_ {:keys [fill? stroke? fill-color line-width x1 y1 x2 y2]
-      :or {fill? true
-           stroke? false
-           line-width 1.0}
+  [_ {:keys [fill stroke x1 y1 x2 y2]
+      :or {fill {}
+           stroke nil}
       :as attrs}
    & children]
-  (let [[width height] (pos/attrs->sizes attrs)
-        fill-color (cond
-                     (fn? fill-color) (fill-color attrs)
-                     (some? fill-color) fill-color
-                     :else (pdf/make-color-by-attrs attrs))]
-    (doto r/*cs*
-      (.setNonStrokingColor fill-color)
-      (.setLineWidth line-width)
-      (.addRect x1 y1 width height))
+  (let [cs r/*cs*
+        [width height] (pos/attrs->sizes attrs)]
+    (when fill
+      (let [color (:color fill)
+            color (cond
+                    (fn? color) (color attrs)
+                    (some? color) color
+                    :else (pdf/make-color-by-attrs attrs))]
+        (.setNonStrokingColor cs color)))
+
+    (when stroke
+      (.setLineWidth cs (:width stroke)))
+
+    (.addRect cs x1 y1 width height)
 
     (cond
-      (and fill? stroke?) (.fillAndStroke r/*cs*)
-      fill? (.fill r/*cs*)
-      stroke? (.stroke r/*cs*))
+      (and fill stroke) (.fillAndStroke cs)
+      fill (.fill cs)
+      stroke (.stroke cs))
 
-    (.closePath r/*cs*)
+    (.closePath cs)
     children))
 
 (defmethod r/render :circle
   [_ {:as attrs
-      :keys [radius stroke? fill? fill-color line-width]
-      :or {line-width 1}} & children]
-  (let [{:keys [x y]} (pos/rect->center attrs)]
-    (doto r/*cs*
-      (.setLineWidth line-width)
-      (pdf/draw-circle x y radius))
-    (when fill?
-      (.setNonStrokingColor fill-color)
-      (.fill r/*cs*))
-    (when stroke?
-      (.stroke r/*cs*)))
+      :keys [radius stroke fill]
+      :or {fill {}
+           stroke nil}} & children]
+  (let [cs r/*cs*
+        {:keys [x y]} (pos/rect->center attrs)]
+    (when fill
+      (.setNonStrokingColor cs (:color fill)))
+    (when stroke
+      (.setLineWidth cs (:width stroke)))
+
+    (pdf/draw-circle cs x y radius)
+
+    (cond
+      (and fill stroke) (.fillAndStroke cs)
+      fill (.fill cs)
+      stroke (.stroke cs)))
   children)
 
 (defmethod r/render :line
@@ -98,9 +107,9 @@
       (vec))))
 
 (defmethod r/render :text
-  [_ {:as attrs :keys [x1 y1 x2 y2 halign valign text font font-size fill-color text-offset children-offset]
+  [_ {:as attrs :keys [x1 y1 x2 y2 halign valign text font font-size color text-offset children-offset]
       :or {font-size 12
-           fill-color Color/BLACK
+           color Color/BLACK
            valign :top
            halign :left
            children-offset 0}}
@@ -135,7 +144,7 @@
 
         (doto r/*cs*
           (.beginText)
-          (.setNonStrokingColor fill-color)
+          (.setNonStrokingColor color)
           (.setFont font font-size)
           (.newLineAtOffset text-pos-x (+ text-pos-y text-offset))
           (.showText text)

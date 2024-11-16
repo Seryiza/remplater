@@ -28,7 +28,7 @@
                       :text-offset 10
                       :children-offset 0}
                [:padding {:padding -5}
-                [:rect {:fill-color (pdf/make-color 255 255 255)}]]]]]))})
+                [:rect {:fill {:color (pdf/make-color 255 255 255)}}]]]]]))})
 
 (defn get-montly-page-name [date]
   (let [{:keys [year month]} (dt/date->units date)]
@@ -88,14 +88,9 @@
                 (get days (:index attrs))]
             (when in-date-range?
               [[:page-link {:target-page page-name}]
-               [:rect (if weekend?
-                        {:fill? true
-                         :fill-color (pdf/make-color 230 230 230)
-                         :stroke? true
-                         :line-width 4}
-                        {:fill? false
-                         :stroke? true
-                         :line-width 4})]
+               [:rect {:fill (when weekend?
+                               {:color (pdf/make-color 230 230 230)})
+                       :stroke {:width 4}}]
                [:padding {:padding-top 10
                           :padding-left 20}
                 [:text {:text label
