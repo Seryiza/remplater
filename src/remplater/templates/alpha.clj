@@ -207,7 +207,7 @@
       [:margin {:margin 40}
        [:pattern-grid {:pattern cells-pattern}]]]])
 
-(def line-pattern-height 50)
+(def line-pattern-height 51)
 
 (defn light-line [{:as attrs :keys [col-index]} & children]
   [:line {:dash {:pattern [1]
@@ -227,17 +227,19 @@
 
 (def timeline-pattern
   (merge line-pattern
-    {:line (fn [{:keys [row-index]}]
-             (let [hour? (and (even? row-index)
-                           (< 1 row-index))
-                   hour (+ 9 (/ row-index 2))]
+    {:line (fn [{:keys [row-index rows]}]
+             (let [rows-count (count rows)
+                   hour? (and (odd? row-index)
+                           (<= 1 row-index)
+                           (<= row-index (- rows-count 2)))
+                   hour (+ 9 (/ (inc row-index) 2))]
                [:div
                 [light-line {}]
                 (when hour?
-                  [:padding {:padding-right 50
-                            :padding-bottom 1}
+                  [:padding {:padding-right 70
+                             :padding-bottom 1}
                    [:text {:text (str hour)
-                           :font-size 20
+                           :font-size 25
                            :valign :center
                            :halign :right}
                     [:rect {:fill {:color (pdf/make-color 255 255 255)}}]]])]))}))

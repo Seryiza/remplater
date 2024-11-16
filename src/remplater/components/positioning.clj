@@ -171,14 +171,16 @@
         splits-x (repeat (dec cols) x-delta)
         splits-y (repeat (dec rows) y-delta)
         cols (->> (split attrs :x splits-x)
-               (map-indexed #(assoc %2 :col-index %1))
-               (vec))
+               (map-indexed #(assoc %2 :col-index %1)))
+        cols (->> cols
+               (mapv #(assoc % :cols cols)))
         lines-x (->> cols
                   (map #(rect->border-line % :right))
                   (drop-last))
         rows (->> (split attrs :y splits-y)
-               (map-indexed #(assoc %2 :row-index %1))
-               (vec))
+               (map-indexed #(assoc %2 :row-index %1)))
+        rows (->> rows
+               (mapv #(assoc % :rows rows)))
         lines-y (->> rows
                   (map #(rect->border-line % :bottom))
                   (drop-last))
