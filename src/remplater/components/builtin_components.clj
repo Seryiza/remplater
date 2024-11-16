@@ -147,7 +147,7 @@
           (.setNonStrokingColor color)
           (.setFont font font-size)
           (.newLineAtOffset text-pos-x (+ text-pos-y text-offset))
-          (.showText text)
+          (.showText (str text))
           (.endText))))))
 
 (defmethod r/render :padding
