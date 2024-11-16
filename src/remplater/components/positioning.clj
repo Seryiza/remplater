@@ -138,7 +138,8 @@
       :x1 (get line 0)
       :y1 (get line 1)
       :x2 (get line 2)
-      :y2 (get line 3))))
+      :y2 (get line 3)
+      :side side)))
 
 (defn rect->border-lines [attrs]
   {:top (rect->border-line attrs :top)
@@ -193,7 +194,9 @@
      :cells cells}))
 
 (defn align-according-to-pattern
-  [{:as attrs :keys [x1 y1 x2 y2 pattern horizontal-align vertical-align]}]
+  [{:as attrs :keys [x1 y1 x2 y2 pattern horizontal-align vertical-align]
+    :or {horizontal-align :left
+         vertical-align :top}}]
   (let [[box-width box-height] (attrs->sizes attrs)
         pattern-width (or (->abs-unit box-width (:width pattern))
                         box-width)
@@ -215,19 +218,17 @@
 
         horizontal-opts
         (case horizontal-align
-          :left {}
+          :left {:padding-right free-space-x}
           :center {:padding-left (/ free-space-x 2)
                    :padding-right (/ free-space-x 2)}
-          :right {:padding-left free-space-x}
-          {})
+          :right {:padding-left free-space-x})
 
         vertical-opts
         (case vertical-align
-          :top {}
+          :top {:padding-bottom free-space-y}
           :center {:padding-top (/ free-space-y 2)
                    :padding-bottom (/ free-space-y 2)}
-          :bottom {:padding-top free-space-y}
-          {})]
+          :bottom {:padding-top free-space-y})]
     (padding attrs (merge horizontal-opts vertical-opts))))
 
 (defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]

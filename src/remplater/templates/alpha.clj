@@ -207,14 +207,19 @@
       [:margin {:margin 40}
        [:pattern-grid {:pattern cells-pattern}]]]])
 
-(defn light-line [attrs & children]
+(def line-pattern-height 50)
+
+(defn light-line [{:as attrs :keys [col-index]} & children]
   [:line {:dash {:pattern [1]
                  :phase 1}}])
 
 (def line-pattern
-  {:height 50
-   :max-rows 31
-   :line light-line})
+  {:height line-pattern-height
+   :row-count 30
+   :line light-line
+   :outline (fn [{:as attrs :keys [side]}]
+              (when (= :bottom side)
+                [light-line]))})
 
 (def timegrid-pattern
   (merge line-pattern
@@ -235,7 +240,7 @@
                            :font-size 20
                            :valign :center
                            :halign :right}
-                    [:rect {:fill-color (pdf/make-color 255 255 255)}]]])]))}))
+                    [:rect {:fill {:color (pdf/make-color 255 255 255)}}]]])]))}))
 
 (defn double-vertical-line [attrs]
   [:div
