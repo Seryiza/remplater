@@ -100,30 +100,32 @@
                                       (pdf/make-color 160 160 160))}]]])))]]]]))
 
 (defn daily-layout [{:keys [date timeline-labels]}]
-  [:aligned-pattern-wrapper {:pattern cells-pattern
-                             :horizontal-align :center}
+  [:aligned-according-to-pattern {:pattern cells-pattern
+                                  :horizontal-align :center
+                                  :vertical-align :center}
    [:split {:direction :y :splits [150]}
-    [:split {:direction :x :splits [(* 4 (:width cells-pattern))]}
-     [:div {}
-      [:border {:border-right {:width 4}}]
-      [:padding {:padding-right 20}
-       [:text {:text (t/format dt/fmt-dd date)
-               :font-size 130
-               :text-offset 30
-               :halign :center
-               :valign :center}]]]
-     [:padding {:padding-left 30}
-      [:split {:direction :y :splits [70]}
-       [:text {:text (-> (t/format dt/fmt-day-of-week date)
-                       (str/upper-case))
-               :font-size 70
-               :valign :top
-               :halign :left}]
-       [:text {:text (t/format dt/fmt-mmmm date)
-               :font-size 50
-               :valign :top
-               :halign :left}
-        [:page-link {:target-page (get-montly-page-name date)}]]]]]
+    [:padding {:padding-bottom 20}
+     [:split {:direction :x :splits [(* 4 (:width cells-pattern))]}
+      [:div {}
+       [:border {:border-right {:width 4}}]
+       [:padding {:padding-right 20}
+        [:text {:text (t/format dt/fmt-dd date)
+                :font-size 130
+                :text-offset 30
+                :halign :center
+                :valign :center}]]]
+      [:padding {:padding-left 30}
+       [:split {:direction :y :splits [70]}
+        [:text {:text (-> (t/format dt/fmt-day-of-week date)
+                        (str/upper-case))
+                :font-size 70
+                :valign :top
+                :halign :left}]
+        [:text {:text (t/format dt/fmt-mmmm date)
+                :font-size 50
+                :valign :top
+                :halign :left}
+         [:page-link {:target-page (get-montly-page-name date)}]]]]]]
     [:pattern-grid {:pattern cells-pattern
                     :timeline-labels timeline-labels}]]])
 

@@ -234,21 +234,18 @@
     (.add annotations annotation-link))
   children)
 
-(defmethod r/render :aligned-pattern-wrapper
+(defmethod r/render :aligned-according-to-pattern
   [_ attrs & children]
-  (into [:padding (pos/aligned-pattern-wrapper attrs)]
-    children))
+  (let [aligned-attrs (pos/align-according-to-pattern attrs)]
+    (->> children
+      (mapv #(r/merge-unexisting-attrs % aligned-attrs)))))
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
 (defmethod r/render :pattern-grid
   [_ {:as attrs :keys [pattern x1 y1 x2 y2]}
    & children]
-  (let [aligned-attrs (->> (merge {:horizontal-align :center
-                                   :vertical-align :center} attrs)
-                           (pos/aligned-pattern-wrapper)
-                           (pos/padding attrs))
-        {:keys [cell line outline row col]} pattern
-        {:keys [cells lines outlines rows cols]} (pos/pattern-grid aligned-attrs)]
+  (let [{:keys [cell line outline row col]} pattern
+        {:keys [cells lines outlines rows cols]} (pos/pattern-grid attrs)]
     [:div
      (when cell
        (->> cells

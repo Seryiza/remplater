@@ -163,7 +163,7 @@
       nil)))
 
 (defn grid [attrs]
-  (let [{:keys [x1 y1 x2 y2 rows cols cell-size]} attrs
+  (let [{:keys [x1 y1 x2 y2 rows cols]} attrs
         [width height] (attrs->sizes attrs)
         x-delta (/ width cols)
         y-delta (/ height rows)
@@ -192,48 +192,8 @@
      :outlines outlines
      :cells cells}))
 
-(defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
-  (let [[width height] (attrs->sizes attrs)
-        pattern-width (or (->abs-unit width (:width pattern))
-                        width)
-        pattern-height (or (->abs-unit height (:height pattern))
-                         height)
-        used-patterns-x (quot width pattern-width)
-        used-patterns-y (quot height pattern-height)
-        {:keys [max-cols max-rows]} pattern
-        used-patterns-x (if max-cols
-                          (min max-cols used-patterns-x)
-                          used-patterns-x)
-        used-patterns-y (if max-rows
-                          (min max-rows used-patterns-y)
-                          used-patterns-y)
-        splits-x (vec (repeat (dec used-patterns-x) pattern-width))
-        splits-y (vec (repeat (dec used-patterns-y) pattern-height))
-        cols (->> (split attrs :x splits-x)
-               (map-indexed #(assoc %2 :col-index %1))
-               (vec))
-        lines-x (->> cols
-                  (map #(rect->border-line % :right))
-                  (drop-last))
-        rows (->> (split attrs :y splits-y)
-               (map-indexed #(assoc %2 :row-index %1))
-               (vec))
-        lines-y (->> rows
-                  (map #(rect->border-line % :bottom))
-                  (drop-last))
-        outlines (vals (rect->border-lines attrs))
-        cells (:cells (grid (assoc attrs
-                              :rows used-patterns-y
-                              :cols used-patterns-x)))]
-    {:cells cells
-     :lines (concat lines-y lines-x)
-     :rows rows
-     :cols cols
-     :outlines outlines}))
-
-;; TODO: add align option
-(defn aligned-pattern-wrapper [{:as attrs :keys [x1 y1 x2 y2 pattern
-                                                 horizontal-align vertical-align]}]
+(defn align-according-to-pattern
+  [{:as attrs :keys [x1 y1 x2 y2 pattern horizontal-align vertical-align]}]
   (let [[box-width box-height] (attrs->sizes attrs)
         pattern-width (or (->abs-unit box-width (:width pattern))
                         box-width)
@@ -241,6 +201,13 @@
                          box-height)
         used-patterns-x (quot box-width pattern-width)
         used-patterns-y (quot box-height pattern-height)
+        {:keys [col-count row-count]} pattern
+        used-patterns-x (if col-count
+                          (min col-count used-patterns-x)
+                          used-patterns-x)
+        used-patterns-y (if row-count
+                          (min row-count used-patterns-y)
+                          used-patterns-y)
         used-space-x (* pattern-width used-patterns-x)
         used-space-y (* pattern-height used-patterns-y)
         free-space-x (- box-width used-space-x)
@@ -248,13 +215,30 @@
 
         horizontal-opts
         (case horizontal-align
+          :left {}
           :center {:padding-left (/ free-space-x 2)
                    :padding-right (/ free-space-x 2)}
+          :right {:padding-left free-space-x}
           {})
 
         vertical-opts
         (case vertical-align
+          :top {}
           :center {:padding-top (/ free-space-y 2)
                    :padding-bottom (/ free-space-y 2)}
+          :bottom {:padding-top free-space-y}
           {})]
-    (merge horizontal-opts vertical-opts)))
+    (padding attrs (merge horizontal-opts vertical-opts))))
+
+(defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
+  (let [attrs (align-according-to-pattern attrs)
+        [width height] (attrs->sizes attrs)
+        pattern-width (or (->abs-unit width (:width pattern))
+                        width)
+        pattern-height (or (->abs-unit height (:height pattern))
+                         height)
+        used-patterns-x (quot width pattern-width)
+        used-patterns-y (quot height pattern-height)]
+    (grid (assoc attrs
+            :rows used-patterns-y
+            :cols used-patterns-x))))
