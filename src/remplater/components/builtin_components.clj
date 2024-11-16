@@ -141,9 +141,9 @@
           (.showText text)
           (.endText))))))
 
-(defmethod r/render :margin
+(defmethod r/render :padding
   [_ attrs & children]
-  (let [new-attrs (pos/margin attrs attrs)]
+  (let [new-attrs (pos/padding attrs attrs)]
     (->> children
       (mapv #(r/merge-unexisting-attrs % new-attrs)))))
 
@@ -227,7 +227,7 @@
 
 (defmethod r/render :aligned-pattern-wrapper
   [_ attrs & children]
-  (into [:margin (pos/aligned-pattern-wrapper attrs)]
+  (into [:padding (pos/aligned-pattern-wrapper attrs)]
     children))
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
@@ -237,7 +237,7 @@
   (let [aligned-attrs (->> (merge {:horizontal-align :center
                                    :vertical-align :center} attrs)
                            (pos/aligned-pattern-wrapper)
-                           (pos/margin attrs))
+                           (pos/padding attrs))
         {:keys [cell line outline row col]} pattern
         {:keys [cells lines outlines rows cols]} (pos/pattern-grid aligned-attrs)]
     [:div

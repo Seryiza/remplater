@@ -66,24 +66,24 @@
                 {:x1 0 :y1 0 :x2 50 :y2 50}
                 {:x1 100 :y1 100 :x2 200 :y2 20})))))
 
-(deftest margin
+(deftest padding
   (is (= {:x1 25 :y1 25 :x2 75 :y2 75}
-        (pos/margin {:x1 0 :y1 0 :x2 100 :y2 100} 25)))
+        (pos/padding {:x1 0 :y1 0 :x2 100 :y2 100} 25)))
   (is (= {:x1 25 :y1 0 :x2 75 :y2 100}
-        (pos/margin {:x1 0 :y1 0 :x2 100 :y2 100} 0 25)))
+        (pos/padding {:x1 0 :y1 0 :x2 100 :y2 100} 0 25)))
   (is (= {:x1 25 :y1 0 :x2 100 :y2 100}
-        (pos/margin {:x1 0 :y1 0 :x2 100 :y2 100} 25 0 0 0)))
+        (pos/padding {:x1 0 :y1 0 :x2 100 :y2 100} 25 0 0 0)))
   (is (= {:x1 25 :y1 0 :x2 100 :y2 100}
-        (pos/margin
+        (pos/padding
           {:x1 0 :y1 0 :x2 100 :y2 100}
-          {:margin-left 25})))
+          {:padding-left 25})))
   (is (= {:x1 25 :y1 25 :x2 75 :y2 75}
-        (pos/margin
+        (pos/padding
           {:x1 0 :y1 0 :x2 100 :y2 100}
-          {:margin-left 25
-           :margin-right 25
-           :margin-top 25
-           :margin-bottom 25}))))
+          {:padding-left 25
+           :padding-right 25
+           :padding-top 25
+           :padding-bottom 25}))))
 
 (deftest grid
   (testing "grid cells"

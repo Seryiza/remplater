@@ -27,7 +27,7 @@
                       :halign :center
                       :text-offset 10
                       :children-offset 0}
-               [:margin {:margin -5}
+               [:padding {:padding -5}
                 [:rect {:fill-color (pdf/make-color 255 255 255)}]]]]]))})
 
 (defn get-montly-page-name [date]
@@ -53,17 +53,17 @@
 (defn monthly-page [{:as opts :keys [date to-date]}]
   (let [days (get-monthly-days opts)]
     [:page {:name (get-montly-page-name date)}
-     [:margin {:margin 80
-               :margin-top 50}
+     [:padding {:padding 80
+                :padding-top 50}
       [:split {:direction :y :splits [200]}
 
        ;; header
-       [:margin {:margin-top 40
-                 :margin-bottom 40}
+       [:padding {:padding-top 40
+                  :padding-bottom 40}
         [:split {:direction :x :splits [#(/ % 7)]}
          [:div {}
           [:border {:border-right {:width 4}}]
-          [:margin {:margin-right 30}
+          [:padding {:padding-right 30}
            [:split {:direction :y :splits [50]}
             [:text {:text (t/format dt/fmt-mm date)
                     :font-size 70
@@ -74,7 +74,7 @@
                     :valign :center
                     :halign :right}]]]]
          [:div {}
-          [:margin {:margin-left 40}
+          [:padding {:padding-left 40}
            [:text {:text (t/format dt/fmt-mmmm date)
                    :text-offset 30
                    :font-size 120
@@ -96,8 +96,8 @@
                         {:fill? false
                          :stroke? true
                          :line-width 4})]
-               [:margin {:margin-top 10
-                         :margin-left 20}
+               [:padding {:padding-top 10
+                          :padding-left 20}
                 [:text {:text label
                         :font-size 50
                         :fill-color (if this-month?
@@ -111,13 +111,13 @@
     [:split {:direction :x :splits [(* 4 (:width cells-pattern))]}
      [:div {}
       [:border {:border-right {:width 4}}]
-      [:margin {:margin-right 20}
+      [:padding {:padding-right 20}
        [:text {:text (t/format dt/fmt-dd date)
                :font-size 130
                :text-offset 30
                :halign :center
                :valign :center}]]]
-     [:margin {:margin-left 30}
+     [:padding {:padding-left 30}
       [:split {:direction :y :splits [70]}
        [:text {:text (-> (t/format dt/fmt-day-of-week date)
                        (str/upper-case))
@@ -136,14 +136,14 @@
   (let [right-page-date (t/>> left-page-date (t/of-days 1))]
     [:page {:name (get-daily-page-name left-page-date)
             :aliases [(get-daily-page-name right-page-date)]}
-     [:margin {:margin 80
-               :margin-top 50}
+     [:padding {:padding 80
+                :padding-top 50}
       [:split {:direction :x
                :splits [#(/ % 2)]}
-       [:margin {:margin-right 20}
+       [:padding {:padding-right 20}
         [daily-layout {:date left-page-date
                        :timeline-labels timeline-labels}]]
-       [:margin {:margin-left 20}
+       [:padding {:padding-left 20}
         (when (t/<= right-page-date to-date)
           [daily-layout {:date right-page-date
                          :timeline-labels timeline-labels}])]]]]))

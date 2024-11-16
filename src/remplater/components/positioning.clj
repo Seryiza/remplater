@@ -102,30 +102,30 @@
                 (join-two joined-attrs curr-attrs))
         (first attrs-to-join)))))
 
-(defn margin
-  ([attrs margin-units]
-   (if (number? margin-units)
-     (margin attrs margin-units margin-units margin-units margin-units)
-     (margin attrs
-       (or (:margin margin-units) (:margin-left margin-units) 0)
-       (or (:margin margin-units) (:margin-top margin-units) 0)
-       (or (:margin margin-units) (:margin-right margin-units) 0)
-       (or (:margin margin-units) (:margin-bottom margin-units) 0))))
+(defn padding
+  ([attrs padding-units]
+   (if (number? padding-units)
+     (padding attrs padding-units padding-units padding-units padding-units)
+     (padding attrs
+       (or (:padding padding-units) (:padding-left padding-units) 0)
+       (or (:padding padding-units) (:padding-top padding-units) 0)
+       (or (:padding padding-units) (:padding-right padding-units) 0)
+       (or (:padding padding-units) (:padding-bottom padding-units) 0))))
 
-  ([attrs margin-vertical margin-horizontal]
-   (margin attrs margin-horizontal margin-vertical margin-horizontal margin-vertical))
+  ([attrs padding-vertical padding-horizontal]
+   (padding attrs padding-horizontal padding-vertical padding-horizontal padding-vertical))
 
-  ([attrs margin-left margin-top margin-right margin-bottom]
+  ([attrs padding-left padding-top padding-right padding-bottom]
    (let [[width height] (attrs->sizes attrs)
-         margin-left (->abs-unit width margin-left)
-         margin-right (->abs-unit width margin-right)
-         margin-top (->abs-unit height margin-top)
-         margin-bottom (->abs-unit height margin-bottom)]
+         padding-left (->abs-unit width padding-left)
+         padding-right (->abs-unit width padding-right)
+         padding-top (->abs-unit height padding-top)
+         padding-bottom (->abs-unit height padding-bottom)]
      (-> attrs
-       (update :x1 + margin-left)
-       (update :x2 - margin-right)
-       (update :y1 + margin-bottom)
-       (update :y2 - margin-top)))))
+       (update :x1 + padding-left)
+       (update :x2 - padding-right)
+       (update :y1 + padding-bottom)
+       (update :y2 - padding-top)))))
 
 (defn rect->border-line [attrs side]
   (let [{:keys [x1 y1 x2 y2]} attrs
@@ -246,16 +246,15 @@
         free-space-x (- box-width used-space-x)
         free-space-y (- box-height used-space-y)
 
-        horizontal-margin-opts
+        horizontal-opts
         (case horizontal-align
-          :center {:margin-left (/ free-space-x 2)
-                   :margin-right (/ free-space-x 2)}
+          :center {:padding-left (/ free-space-x 2)
+                   :padding-right (/ free-space-x 2)}
           {})
 
-        vertical-margin-opts
+        vertical-opts
         (case vertical-align
-          :center {:margin-top (/ free-space-y 2)
-                   :margin-bottom (/ free-space-y 2)}
+          :center {:padding-top (/ free-space-y 2)
+                   :padding-bottom (/ free-space-y 2)}
           {})]
-    (merge horizontal-margin-opts
-      vertical-margin-opts)))
+    (merge horizontal-opts vertical-opts)))
