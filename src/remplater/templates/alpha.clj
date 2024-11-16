@@ -234,8 +234,8 @@
                [:div
                 [light-line {}]
                 (when hour?
-                  [:margin {:margin-right 50
-                            :margin-bottom 1}
+                  [:padding {:padding-right 50
+                            :padding-bottom 1}
                    [:text {:text (str hour)
                            :font-size 20
                            :valign :center
@@ -245,7 +245,7 @@
 (defn double-vertical-line [attrs]
   [:div
    [:border {:border-right {:width 1}}]
-   [:margin {:margin-right 10}
+   [:padding {:padding-right 10}
     [:border {:border-right {:width 1}}]]])
 
 (defn single-horizontal-line [attrs]
@@ -273,8 +273,8 @@
 (defn day-page [{:as attrs :keys [date]}]
   [:page {:name "day-page"}
    [page-layout
-    {:top-left [:margin {:margin-top 80
-                         :margin-right 40}
+    {:top-left [:padding {:padding-top 80
+                          :padding-right 40}
                 [:split {:direction :y :splits [90]}
                  [:text {:text "16"
                          :font-size 80
