@@ -103,10 +103,10 @@
 
 (deftest rect->border-line
   (let [attrs {:x1 0 :y1 0 :x2 100 :y2 100}
-        bottom {:x1 0 :y1 0 :x2 100 :y2 0}
-        top {:x1 0 :y1 100 :x2 100 :y2 100}
-        left {:x1 0 :y1 0 :x2 0 :y2 100}
-        right {:x1 100 :y1 0 :x2 100 :y2 100}]
+        bottom {:x1 0 :y1 0 :x2 100 :y2 0 :side :bottom}
+        top {:x1 0 :y1 100 :x2 100 :y2 100 :side :top}
+        left {:x1 0 :y1 0 :x2 0 :y2 100 :side :left}
+        right {:x1 100 :y1 0 :x2 100 :y2 100 :side :right}]
     (is (= bottom (pos/rect->border-line attrs :bottom)))
     (is (= top (pos/rect->border-line attrs :top)))
     (is (= left (pos/rect->border-line attrs :left)))
