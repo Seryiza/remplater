@@ -14,6 +14,10 @@ inspired by [Remarkably Organized](https://remarkably-organized.pages.dev/) ⨯ 
 | ---------- | ---------------- | -------- |
 | ![Month Page](.github/images/alpha_month_page.png) | ![Month Inbox Page](.github/images/alpha_month_inbox_page.png) | ![Day Page](.github/images/alpha_day_page.png) |
 
+| Notes Sections | Notes Subsections | Note Page |
+| ---------- | ---------------- | -------- |
+| ![Notes Sections](.github/images/alpha_notes_sections.png) | ![Notes Subsections](.github/images/alpha_notes_index.png) | ![Note Page](.github/images/alpha_notes_page.png) |
+
 #### Remarkable-Calendar
 inspired by [elainajones](https://github.com/elainajones/remarkable-calendar) ⨯ Hobonichi Techo
 
