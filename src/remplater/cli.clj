@@ -49,8 +49,8 @@ Options:
                                             :to-date (parse-date (get arg-map "--end-date"))
                                             :timeline-labels (parse-timeline-labels (get arg-map "--timeline-labels"))})
                    "alpha" (template-alpha/document
-                             {:from-date (t/new-date 2024 11 1)
-                              :to-date (t/new-date 2024 11 30)}))]
+                             {:from-date (parse-date (get arg-map "--start-date"))
+                              :to-date (parse-date (get arg-map "--end-date"))}))]
     (cond-> document
       custom-filename (assoc-in [1 :output] custom-filename)
       :always (r/render-document))))
