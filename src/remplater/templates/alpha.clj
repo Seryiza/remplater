@@ -16,14 +16,14 @@
 (defn get-day-page-name [date]
   (str "day-page-" (t/format dt/fmt-yyyy date) "-" (t/format dt/fmt-mm date) "-" (t/format dt/fmt-dd date)))
 
-(defn get-notes-index-page-name [page-index]
-  (str "notes-index-page-" page-index))
+(defn get-notes-sections-page-name [date]
+  (str "notes-index-page-" (t/format dt/fmt-yyyy date)))
 
-(defn get-notes-index-alias-by-note [note-index]
-  (str "notes-index-page-by-note-" note-index))
+(defn get-notes-subsections-page-name [letter]
+  (str "notes-subsections-page-" letter))
 
-(defn get-notes-page-name [note-index]
-  (str "notes-page-" note-index))
+(defn get-notes-page-name [letter number]
+  (str "notes-page-" letter number))
 
 (defn get-monthly-weeks [{:keys [date]}]
   (comment
@@ -52,10 +52,13 @@
                :this-month? (= (t/month date) (t/month month-start))
                :weekend? (dt/weekend? date)})))))
 
+(def line-pattern-rows 30)
 (def line-pattern-height 51)
 (def double-vertical-line-gap 10)
+(def title-font-size 80)
 (def subtitle-font-size 22)
 (def sideline-font-size 22)
+(def notes-sections ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K" "L" "M" "N"])
 
 (defn light-line [{:as attrs :keys [col-index]} & children]
   [:line {:dash {:pattern [3]
@@ -91,13 +94,30 @@
 
 (def line-pattern
   {:height line-pattern-height
-   :row-count 30
+   :row-count line-pattern-rows
    :line light-line
    :outline bottom-normal-outline
    :row (fn [{:as attrs :keys [row-content row-index]}]
           (when (and row-content row-index)
             (when-let [content (get row-content row-index)]
               content)))})
+
+(def normal-line-pattern
+  (merge line-pattern
+    {:line normal-line
+     :outline bottom-normal-outline}))
+
+(def notes-section-pattern
+  (merge normal-line-pattern
+    {:height 100
+     :row-count 14}))
+
+(def notes-subsection-pattern
+  (merge normal-line-pattern
+    {:row (fn [{:keys [letter row-index]}]
+            (let [number (inc row-index)]
+              [sideline-item {:text (str number ">")}
+               [:page-link {:target-page (get-notes-page-name letter number)}]]))}))
 
 (def timegrid-pattern
   (merge line-pattern
@@ -217,9 +237,10 @@
               :halign :left}]]
 
      :top-right-subtitle-4
-     [:text {:text "NOTES>"
-             :font-size subtitle-font-size
-             :halign :left}]
+     [:page-link {:target-page (get-notes-sections-page-name date)}
+      [:text {:text "NOTES>"
+              :font-size subtitle-font-size
+              :halign :left}]]
 
      :bottom-left
      [:pattern-grid {:pattern timeline-pattern
@@ -253,9 +274,10 @@
              :halign :left}]
 
      :top-right-subtitle-4
-     [:text {:text "NOTES>"
-             :font-size subtitle-font-size
-             :halign :left}]
+     [:page-link {:target-page (get-notes-sections-page-name date)}
+      [:text {:text "NOTES>"
+              :font-size subtitle-font-size
+              :halign :left}]]
 
      :bottom-left
      [:pattern-grid {:pattern line-pattern
@@ -314,7 +336,8 @@
                          :weeks month-weeks}]
          [:pattern-grid {:pattern line-pattern
                          :vertical-align :top
-                         :row-content {0 [sideline-item {:text "NOTES>"}]
+                         :row-content {0 [sideline-item {:text "NOTES>"}
+                                          [:page-link {:target-page (get-notes-sections-page-name date)}]]
                                        3 [sideline-item {:text "INBOX>"}
                                           [:page-link {:target-page (get-month-inbox-page-name date)}]]}}]]]
 
@@ -342,6 +365,91 @@
          [:pattern-grid {:pattern line-pattern
                          :vertical-align :top}]]]}]]))
 
+(defn notes-sections-page [{:keys [date]}]
+  [:page {:name (get-notes-sections-page-name date)}
+   [page-layout
+    {:top-left-subtitle
+     [:page-link {:target-page (get-month-page-name date)}
+      [:text {:text (str
+                      (str/upper-case
+                        (t/format dt/fmt-yyyy date))
+                      ">")
+              :font-size subtitle-font-size
+              :halign :center}]]
+
+     :top-right-title
+     [:page-link {:target-page (get-notes-sections-page-name date)}
+      [:text {:text "NOTES"
+              :font-size 80
+              :halign :left}]]
+
+     :top-right-subtitle
+     [:text {:text "SECTIONS"
+             :font-size subtitle-font-size
+             :halign :left}]
+
+     :bottom-left
+     [:pattern-grid {:pattern notes-section-pattern
+                     :vertical-align :top
+                     :row-content (->> notes-sections
+                                    (mapv (fn [letter]
+                                            [sideline-item {:text (str letter ">")}
+                                             [:page-link {:target-page (get-notes-subsections-page-name letter)}]])))}]
+
+     :bottom-right
+     [:pattern-grid {:pattern notes-section-pattern
+                     :vertical-align :top}]}]])
+
+(defn notes-subsections-page [{:keys [date letter]}]
+  [:page {:name (get-notes-subsections-page-name letter)}
+   [page-layout
+    {:top-left-title
+     [:text {:text letter
+             :font-size title-font-size
+             :halign :center}]
+
+     :top-left-subtitle
+     [:page-link {:target-page (get-notes-sections-page-name date)}
+      [:text {:text "SEC>"
+              :font-size subtitle-font-size
+              :halign :center}]]
+
+     :top-right-subtitle
+     [:text {:text "INDEX"
+             :font-size subtitle-font-size
+             :halign :left}]
+
+     :bottom-left
+     [:pattern-grid {:pattern notes-subsection-pattern
+                     :vertical-align :top
+                     :letter letter}]
+
+     :bottom-right
+     [:pattern-grid {:pattern normal-line-pattern
+                     :vertical-align :top}]}]])
+
+(defn notes-page [{:keys [date letter number]}]
+  [:page {:name (get-notes-page-name letter number)}
+   [page-layout
+    {:top-left-title
+     [:text {:text (str letter number)
+             :font-size title-font-size
+             :halign :center}]
+
+     :top-left-subtitle
+     [:page-link {:target-page (get-notes-subsections-page-name letter)}
+      [:text {:text (str letter ">")
+              :font-size subtitle-font-size
+              :halign :center}]]
+
+     :bottom-left
+     [:pattern-grid {:pattern line-pattern
+                     :vertical-align :top}]
+
+     :bottom-right
+     [:pattern-grid {:pattern line-pattern
+                     :vertical-align :top}]}]])
+
 (defn document [{:keys [from-date to-date]}]
   (into [:document {:output "/tmp/alpha.pdf"
                     :page-size pdf/remarkable-2-page-size
@@ -355,6 +463,16 @@
       (->> (dt/range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
                 [month-index-page {:date date}])))
+
+      [[notes-sections-page {:date from-date}]]
+
+      (->> notes-sections
+        (mapv (fn [letter]
+                [notes-subsections-page {:date from-date :letter letter}])))
+
+      (for [letter notes-sections
+            number (range 1 (inc line-pattern-rows))]
+        [notes-page {:date from-date :letter letter :number number}])
 
       (->> (dt/range-dates from-date to-date (t/of-days 1))
         (mapv (fn [date]
