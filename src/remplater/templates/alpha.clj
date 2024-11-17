@@ -74,14 +74,12 @@
   [:border {:border-bottom {:width 1}}])
 
 (defn sideline-item [attrs & children]
-  (into
-    [:div
-     [:padding {:padding-right 50}
-      [:text {:text (:text attrs)
-              :font-size sideline-font-size
-              :valign :center
-              :halign :right}]]]
-    children))
+  [:padding {:padding-right 50}
+   [:text {:text (:text attrs)
+           :font-size sideline-font-size
+           :valign :center
+           :halign :right}
+    (into [:padding {:padding -15}] children)]])
 
 (defn bottom-light-outline [{:as attrs :keys [side]} & children]
   (when (= :bottom side)
@@ -319,7 +317,7 @@
                   :halign :center}])]
 
        :bottom-left
-       [:div
+       [:aligned-according-to-pattern {:pattern line-pattern}
         [:split {:direction :y :splits [(* 3 weeks-count line-pattern-height)]}
          [:pattern-grid {:pattern month-weeks-pattern
                          :vertical-align :top
@@ -331,26 +329,27 @@
                                           [:page-link {:target-page (get-month-inbox-page-name date)}]]}}]]]
 
        :bottom-right
-       [:split {:direction :y :splits [(* 3 weeks-count line-pattern-height)]}
-        [:grid {:cols 7 :rows weeks-count
-                :line normal-line
-                :outline bottom-normal-outline}
-         (fn [{:keys [index]}]
-           (let [{:keys [page-name label this-month?]} (get month-days index)]
-             [:padding {:padding 12}
-              (when this-month?
-                [:page-link {:target-page page-name}])
+       [:aligned-according-to-pattern {:pattern line-pattern}
+        [:split {:direction :y :splits [(* 3 weeks-count line-pattern-height)]}
+         [:grid {:cols 7 :rows weeks-count
+                 :line normal-line
+                 :outline bottom-normal-outline}
+          (fn [{:keys [index]}]
+            (let [{:keys [page-name label this-month?]} (get month-days index)]
+              [:padding {:padding 12}
+               (when this-month?
+                 [:page-link {:target-page page-name}])
 
-              [:text {:text (str label
-                              (when this-month? ">"))
-                      :color (if this-month?
-                               (pdf/make-color 0 0 0)
-                               (pdf/make-color 200 200 200))
-                      :font-size sideline-font-size
-                      :halign :right
-                      :valign :top}]]))]
-        [:pattern-grid {:pattern line-pattern
-                        :vertical-align :top}]]}]]))
+               [:text {:text (str label
+                               (when this-month? ">"))
+                       :color (if this-month?
+                                (pdf/make-color 0 0 0)
+                                (pdf/make-color 200 200 200))
+                       :font-size sideline-font-size
+                       :halign :right
+                       :valign :top}]]))]
+         [:pattern-grid {:pattern line-pattern
+                         :vertical-align :top}]]]}]]))
 
 (defn document [{:keys [from-date to-date]}]
   (into [:document {:output "/tmp/alpha.pdf"
