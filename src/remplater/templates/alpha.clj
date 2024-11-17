@@ -336,7 +336,7 @@
                  :outline bottom-normal-outline}
           (fn [{:keys [index]}]
             (let [{:keys [page-name label this-month?]} (get month-days index)]
-              [:padding {:padding 12}
+              [:padding {:padding 15}
                (when this-month?
                  [:page-link {:target-page page-name}])
 
