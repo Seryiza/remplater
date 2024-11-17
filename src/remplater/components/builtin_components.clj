@@ -120,6 +120,7 @@
                (PDType1Font. Standard14Fonts$FontName/HELVETICA))]
     (let [[block-width block-height] (pos/attrs->sizes attrs)
           text-height font-size
+          text (str text)
           text-width (* font-size (/ (.getStringWidth font text) 1000))
           text-offset (or text-offset (/ text-height 6))
           free-space-x (- block-width text-width)
@@ -147,7 +148,7 @@
           (.setNonStrokingColor color)
           (.setFont font font-size)
           (.newLineAtOffset text-pos-x (+ text-pos-y text-offset))
-          (.showText (str text))
+          (.showText text)
           (.endText))))))
 
 (defmethod r/render :padding
@@ -261,9 +262,9 @@
          (into [:div])))
      (when row
        (->> rows
-         (map #(r/merge-unexisting-attrs row % {:rows rows} attrs))
+         (map #(r/merge-unexisting-attrs row % attrs))
          (into [:div])))
      (when col
        (->> cols
-         (map #(r/merge-unexisting-attrs col % {:cols cols} attrs))
+         (map #(r/merge-unexisting-attrs col % attrs))
          (into [:div])))]))

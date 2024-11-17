@@ -15,9 +15,10 @@
     (/ (Integer/parseInt number) 100)))
 
 (defn ->abs-unit [total-size units]
-  (if (percent-units? units)
-    (* total-size (percent-units->number units))
-    units))
+  (cond
+    (percent-units? units) (* total-size (percent-units->number units))
+    (ratio? units) (* total-size units)
+    :else units))
 
 (defn attrs->sizes [{:keys [x1 y1 x2 y2]}]
   (let [width (abs (- x2 x1))
@@ -170,18 +171,20 @@
         y-delta (/ height rows)
         splits-x (repeat (dec cols) x-delta)
         splits-y (repeat (dec rows) y-delta)
-        cols (->> (split attrs :x splits-x)
-               (map-indexed #(assoc %2 :col-index %1)))
-        cols (->> cols
-               (mapv #(assoc % :cols cols)))
-        lines-x (->> cols
+        cols-attrs (->> (split attrs :x splits-x)
+                     (map-indexed #(assoc %2 :col-index %1))
+                     (vec))
+        cols-attrs (->> cols-attrs
+                     (mapv #(assoc % :cols cols-attrs)))
+        lines-x (->> cols-attrs
                   (map #(rect->border-line % :right))
                   (drop-last))
-        rows (->> (split attrs :y splits-y)
-               (map-indexed #(assoc %2 :row-index %1)))
-        rows (->> rows
-               (mapv #(assoc % :rows rows)))
-        lines-y (->> rows
+        rows-attrs (->> (split attrs :y splits-y)
+                     (map-indexed #(assoc %2 :row-index %1))
+                     (vec))
+        rows-attrs (->> rows-attrs
+                     (mapv #(assoc % :rows rows-attrs)))
+        lines-y (->> rows-attrs
                   (map #(rect->border-line % :bottom))
                   (drop-last))
         outlines (vals (rect->border-lines attrs))
@@ -189,8 +192,8 @@
                 (map #(split % :x splits-x))
                 (flatten)
                 (map-indexed #(assoc %2 :index %1)))]
-    {:rows rows
-     :cols cols
+    {:rows rows-attrs
+     :cols cols-attrs
      :lines (concat lines-y lines-x)
      :outlines outlines
      :cells cells}))
