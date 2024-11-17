@@ -344,7 +344,7 @@
                                (when this-month? ">"))
                        :color (if this-month?
                                 (pdf/make-color 0 0 0)
-                                (pdf/make-color 200 200 200))
+                                (pdf/make-color 150 150 150))
                        :font-size sideline-font-size
                        :halign :right
                        :valign :top}]]))]
