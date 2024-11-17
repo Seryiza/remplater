@@ -162,8 +162,8 @@
         [:padding {:padding-top 190}
          (:top-right-subtitles attrs)]
 
-        [:split {:direction :x :splits [#(/ % 2)]}
-         [:split {:direction :x :splits [#(/ % 2)]}
+        [:split {:direction :x :splits ["50%"]}
+         [:split {:direction :x :splits ["50%"]}
           [:padding {:padding-top 90
                      :padding-left 30}
            [:split {:direction :y :splits [100]}
@@ -172,7 +172,7 @@
              (:top-right-subtitle attrs)]]]
           [:padding {:padding-top 190}
            (:top-right-subtitle-2 attrs)]]
-         [:split {:direction :x :splits [#(/ % 2)]}
+         [:split {:direction :x :splits ["50%"]}
           [:padding {:padding-top 190}
            (:top-right-subtitle-3 attrs)]
           [:padding {:padding-top 190}

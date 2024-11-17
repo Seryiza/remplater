@@ -136,7 +136,7 @@
      [:padding {:padding 80
                 :padding-top 50}
       [:split {:direction :x
-               :splits [#(/ % 2)]}
+               :splits ["50%"]}
        [:padding {:padding-right 20}
         [daily-layout {:date left-page-date
                        :timeline-labels timeline-labels}]]

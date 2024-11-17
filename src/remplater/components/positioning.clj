@@ -16,6 +16,7 @@
 
 (defn ->abs-unit [total-size units]
   (cond
+    (fn? units) (units total-size)
     (percent-units? units) (* total-size (percent-units->number units))
     (ratio? units) (* total-size units)
     :else units))
@@ -37,9 +38,7 @@
         lower (get attrs lower-kw)
         upper (get attrs upper-kw)
         total-size (abs (- upper lower))
-        size-delta (if (fn? split-size)
-                     (split-size total-size)
-                     split-size)
+        size-delta (->abs-unit total-size split-size)
         splitted-coordinate (if horizontal?
                               (+ lower size-delta)
                               (- upper size-delta))

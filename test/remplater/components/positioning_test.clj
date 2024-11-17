@@ -25,7 +25,13 @@
     (is (= [{:x1 0 :y1 0 :x2 50 :y2 100}
             {:x1 50 :y1 0 :x2 75 :y2 100}
             {:x1 75 :y1 0 :x2 100 :y2 100}]
-          (pos/split {:x1 0 :y1 0 :x2 100 :y2 100} :x [50 #(/ % 2)])))))
+          (pos/split {:x1 0 :y1 0 :x2 100 :y2 100} :x [50 #(/ % 2)]))))
+
+  (testing "split by x (percents)"
+    (is (= [{:x1 0 :y1 0 :x2 50 :y2 100}
+            {:x1 50 :y1 0 :x2 75 :y2 100}
+            {:x1 75 :y1 0 :x2 100 :y2 100}]
+          (pos/split {:x1 0 :y1 0 :x2 100 :y2 100} :x ["50%" "50%"])))))
 
 (deftest join
   (testing "vertical join"
