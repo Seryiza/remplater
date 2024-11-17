@@ -95,9 +95,9 @@
                           :padding-left 20}
                 [:text {:text label
                         :font-size 50
-                        :fill-color (if this-month?
-                                      (pdf/make-color 0 0 0)
-                                      (pdf/make-color 160 160 160))}]]])))]]]]))
+                        :color (if this-month?
+                                 (pdf/make-color 0 0 0)
+                                 (pdf/make-color 160 160 160))}]]])))]]]]))
 
 (defn daily-layout [{:keys [date timeline-labels]}]
   [:aligned-according-to-pattern {:pattern cells-pattern
