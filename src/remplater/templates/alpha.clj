@@ -336,18 +336,19 @@
                  :outline bottom-normal-outline}
           (fn [{:keys [index]}]
             (let [{:keys [page-name label this-month?]} (get month-days index)]
-              [:padding {:padding 15}
+              [:div
                (when this-month?
                  [:page-link {:target-page page-name}])
 
-               [:text {:text (str label
-                               (when this-month? ">"))
-                       :color (if this-month?
-                                (pdf/make-color 0 0 0)
-                                (pdf/make-color 150 150 150))
-                       :font-size sideline-font-size
-                       :halign :right
-                       :valign :top}]]))]
+               [:padding {:padding 15}
+                [:text {:text (str label
+                                (when this-month? ">"))
+                        :color (if this-month?
+                                 (pdf/make-color 0 0 0)
+                                 (pdf/make-color 150 150 150))
+                        :font-size sideline-font-size
+                        :halign :right
+                        :valign :top}]]]))]
          [:pattern-grid {:pattern line-pattern
                          :vertical-align :top}]]]}]]))
 
