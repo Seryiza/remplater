@@ -243,28 +243,5 @@
 
 ;; TODO: add draw-order attrs (to draw row lines over col lines)
 (defmethod r/render :pattern-grid
-  [_ {:as attrs :keys [pattern x1 y1 x2 y2]}
-   & children]
-  (let [{:keys [cell line outline row col]} pattern
-        {:keys [cells lines outlines rows cols]} (pos/pattern-grid attrs)]
-    [:div
-     (when cell
-       (->> cells
-         (map #(r/merge-unexisting-attrs cell % attrs))
-         (into [:div])))
-     (when line
-       (->> lines
-         (map #(r/merge-unexisting-attrs line % attrs))
-         (into [:div])))
-     (when outline
-       (->> outlines
-         (map #(r/merge-unexisting-attrs outline % {:cap-style 2} attrs))
-         (into [:div])))
-     (when row
-       (->> rows
-         (map #(r/merge-unexisting-attrs row % attrs))
-         (into [:div])))
-     (when col
-       (->> cols
-         (map #(r/merge-unexisting-attrs col % attrs))
-         (into [:div])))]))
+  [_ attrs & children]
+  (into [:grid (pos/pattern-attrs->grid-attrs attrs)] children))

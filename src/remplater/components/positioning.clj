@@ -235,7 +235,7 @@
           :bottom {:padding-top free-space-y})]
     (padding attrs (merge horizontal-opts vertical-opts))))
 
-(defn pattern-grid [{:as attrs :keys [pattern x1 y1 x2 y2]}]
+(defn pattern-attrs->grid-attrs [{:as attrs :keys [pattern x1 y1 x2 y2]}]
   (let [attrs (align-according-to-pattern attrs)
         [width height] (attrs->sizes attrs)
         pattern-width (or (->abs-unit width (:width pattern))
@@ -244,6 +244,7 @@
                          height)
         used-patterns-x (quot width pattern-width)
         used-patterns-y (quot height pattern-height)]
-    (grid (assoc attrs
-            :rows used-patterns-y
-            :cols used-patterns-x))))
+    (merge attrs
+      {:rows used-patterns-y
+       :cols used-patterns-x}
+      (select-keys pattern [:cell :line :outline :row :col]))))
