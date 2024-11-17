@@ -252,16 +252,6 @@
              :font-size 80
              :halign :left}]
 
-     :top-right-subtitle
-     [:text {:text (str "SEP INB>")
-             :font-size subtitle-font-size
-             :halign :left}]
-
-     :top-right-subtitle-2
-     [:text {:text (str "DEC INB>")
-             :font-size subtitle-font-size
-             :halign :left}]
-
      :top-right-subtitle-4
      [:text {:text "NOTES>"
              :font-size subtitle-font-size
@@ -373,4 +363,4 @@
 (comment
   (render/render-document
     (document {:from-date (t/new-date 2024 11 1)
-               :to-date (t/new-date 2024 11 30)})))
+               :to-date (t/new-date 2024 12 31)})))
