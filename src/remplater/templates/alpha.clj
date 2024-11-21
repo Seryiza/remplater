@@ -7,6 +7,15 @@
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
+(def weekday-labels
+  {0 "MONDAY"
+   1 "TUESDAY"
+   2 "WEDNESDAY"
+   3 "THURSDAY"
+   4 "FRIDAY"
+   5 "SATURDAY"
+   6 "SUNDAY"})
+
 (defn get-year-page-name [date]
   (str "year-page-" (t/format dt/fmt-yyyy date)))
 
@@ -51,6 +60,7 @@
     (->> (dt/range-dates calendar-start-day calendar-end-day)
       (mapv (fn [date]
               {:label (t/format dt/fmt-dd date)
+               :short-label (t/format dt/fmt-d date)
                :page-name (get-day-page-name date)
                :this-month? (= (t/month date) (t/month month-start))
                :weekend? (dt/weekend? date)})))))
@@ -292,21 +302,56 @@
                      :vertical-align :top}]}]])
 
 (defn year-page [{:keys [date]}]
-  (let []
-    [:page {:name (get-year-page-name date)}
-     [page-layout
-      {:top-left-title
-       [:text {:text (t/format dt/fmt-yyyy date)
-               :font-size 80
-               :halign :right}]
+  [:page {:name (get-year-page-name date)}
+   [page-layout
+    {:top-left-title
+     [:text {:text (t/format dt/fmt-yyyy date)
+             :font-size 80
+             :halign :right}]
 
-       :bottom-left
-       [:pattern-grid {:pattern line-pattern
-                       :vertical-align :top}]
+     :bottom-left
+     [:aligned-according-to-pattern {:pattern line-pattern}
+      [:grid {:rows 4 :cols 1
+              :line light-line
+              :outline bottom-normal-outline}]]
 
-       :bottom-right
-       [:pattern-grid {:pattern line-pattern
-                       :vertical-align :top}]}]]))
+     :bottom-right
+     [:aligned-according-to-pattern {:pattern line-pattern}
+      [:grid {:rows 4 :cols 3
+              :line light-line
+              :outline bottom-normal-outline}
+       (fn [month-attrs]
+         (let [month-index (:index month-attrs)
+               month-date (t/with date (t/month (inc month-index)))
+               month-days (get-monthly-days {:date month-date})]
+           [:page-link {:target-page (get-month-page-name month-date)}
+            [:split {:direction :y :splits [50 50]}
+             [:padding {:padding 20}
+              [:text {:text (str/upper-case
+                              (t/format dt/fmt-mmmm month-date))
+                      :font-size 20
+                      :font :bold
+                      :valign :center
+                      :halign :left}]]
+             [:grid {:rows 1 :cols 7}
+              (fn [{:keys [index]}]
+                [:padding {:padding 20}
+                 [:text {:text (subs (get weekday-labels index) 0 1)
+                         :font-size 18
+                         :font :bold
+                         :color (pdf/make-color 150 150 150)
+                         :valign :center
+                         :halign :center}]])]
+             [:grid {:rows 6 :cols 7}
+              (fn [day-attrs]
+                (let [day-index (:index day-attrs)
+                      day (get month-days day-index)]
+                  (when (:this-month? day)
+                    [:padding {:padding 20}
+                     [:text {:text (:short-label day)
+                             :font-size 20
+                             :valign :center
+                             :halign :center}]])))]]]))]]}]])
 
 (defn month-page [{:keys [date]}]
   (let [month-weeks (get-monthly-weeks {:date date})
@@ -320,13 +365,14 @@
                :halign :right}]
 
        :top-left-subtitle
-       [:text {:text (str
-                       (str/upper-case
-                         (t/format dt/fmt-yyyy date))
-                       ">")
-               :font-size subtitle-font-size
-               :halign :center
-               :valign :center}]
+       [:page-link {:target-page (get-year-page-name date)}
+        [:text {:text (str
+                        (str/upper-case
+                          (t/format dt/fmt-yyyy date))
+                        ">")
+                :font-size subtitle-font-size
+                :halign :center
+                :valign :center}]]
 
        :top-right-title
        [:text {:text (str/upper-case
@@ -337,14 +383,7 @@
        :top-right-subtitles
        [:grid {:rows 1 :cols 7}
         (fn [{:keys [index]}]
-          [:text {:text (case index
-                          0 "MONDAY"
-                          1 "TUESDAY"
-                          2 "WEDNESDAY"
-                          3 "THURSDAY"
-                          4 "FRIDAY"
-                          5 "SATURDAY"
-                          6 "SUNDAY")
+          [:text {:text (get weekday-labels index)
                   :font-size subtitle-font-size
                   :valign :center
                   :halign :center}])]
@@ -505,5 +544,5 @@
 
 (comment
   (render/render-document
-    (document {:from-date (t/new-date 2024 11 1)
+    (document {:from-date (t/new-date 2024 1 1)
                :to-date (t/new-date 2024 12 31)})))
