@@ -429,7 +429,7 @@
   [:page {:name (get-notes-sections-page-name date)}
    [page-layout
     {:top-left-subtitle
-     [:page-link {:target-page (get-month-page-name date)}
+     [:page-link {:target-page (get-year-page-name date)}
       [:text {:text (str
                       (str/upper-case
                         (t/format dt/fmt-yyyy date))
