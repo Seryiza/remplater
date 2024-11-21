@@ -171,7 +171,8 @@
         [:padding {:padding-top 90
                    :padding-left 130}
          [:split {:direction :y :splits [100]}
-          (:top-left-title attrs)
+          [:padding {:padding-right 40}
+           (:top-left-title attrs)]
           (:top-left-subtitle attrs)]]
 
         (:top-left attrs)]
@@ -211,7 +212,7 @@
     {:top-left-title
      [:text {:text (t/format dt/fmt-dd date)
              :font-size 80
-             :halign :center}]
+             :halign :right}]
 
      :top-left-subtitle
      [:page-link {:target-page (get-month-page-name date)}
@@ -259,7 +260,7 @@
     {:top-left-title
      [:text {:text (t/format dt/fmt-mm date)
              :font-size 80
-             :halign :center}]
+             :halign :right}]
 
      :top-left-subtitle
      [:page-link {:target-page (get-month-page-name date)}
@@ -297,7 +298,7 @@
       {:top-left-title
        [:text {:text (t/format dt/fmt-yyyy date)
                :font-size 80
-               :halign :center}]
+               :halign :right}]
 
        :bottom-left
        [:pattern-grid {:pattern line-pattern
@@ -316,7 +317,7 @@
       {:top-left-title
        [:text {:text (t/format dt/fmt-mm date)
                :font-size 80
-               :halign :center}]
+               :halign :right}]
 
        :top-left-subtitle
        [:text {:text (str
@@ -426,7 +427,7 @@
     {:top-left-title
      [:text {:text letter
              :font-size title-font-size
-             :halign :center}]
+             :halign :right}]
 
      :top-left-subtitle
      [:page-link {:target-page (get-notes-sections-page-name date)}
@@ -454,7 +455,7 @@
     {:top-left-title
      [:text {:text (str letter number)
              :font-size title-font-size
-             :halign :center}]
+             :halign :right}]
 
      :top-left-subtitle
      [:page-link {:target-page (get-notes-subsections-page-name letter)}
