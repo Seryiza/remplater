@@ -7,6 +7,9 @@
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
+(defn get-year-page-name [date]
+  (str "year-page-" (t/format dt/fmt-yyyy date)))
+
 (defn get-month-page-name [date]
   (str "month-page-" (t/format dt/fmt-yyyy date) "-" (t/format dt/fmt-mm date)))
 
@@ -287,6 +290,23 @@
      [:pattern-grid {:pattern line-pattern
                      :vertical-align :top}]}]])
 
+(defn year-page [{:keys [date]}]
+  (let []
+    [:page {:name (get-year-page-name date)}
+     [page-layout
+      {:top-left-title
+       [:text {:text (t/format dt/fmt-yyyy date)
+               :font-size 80
+               :halign :center}]
+
+       :bottom-left
+       [:pattern-grid {:pattern line-pattern
+                       :vertical-align :top}]
+
+       :bottom-right
+       [:pattern-grid {:pattern line-pattern
+                       :vertical-align :top}]}]]))
+
 (defn month-page [{:keys [date]}]
   (let [month-weeks (get-monthly-weeks {:date date})
         month-days (get-monthly-days {:date date})
@@ -456,6 +476,10 @@
                     :fonts {:default "fonts/Iosevka-Regular.ttf"
                             :bold "fonts/Iosevka-Bold.ttf"}}]
     (concat
+      (->> (dt/range-dates from-date to-date (t/of-years 1))
+        (mapv (fn [date]
+                [year-page {:date date}])))
+
       (->> (dt/range-dates from-date to-date (t/of-months 1))
         (mapv (fn [date]
                 [month-page {:date date}])))
