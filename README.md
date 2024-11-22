@@ -7,12 +7,12 @@ My PDF templates and code to generate them targeted Remarkable 2.
 Feel free to [download](https://github.com/Seryiza/remplater/releases) and generate PDFs, create your templates via clojure, and suggest ideas for new templates in [issues](https://github.com/Seryiza/remplater/issues).
 
 ### Templates
-#### [Work In Progress] Alpha Planner
+#### Alpha Planner
 inspired by [Remarkably Organized](https://remarkably-organized.pages.dev/) ⨯ [The Time-Block Planner](https://www.timeblockplanner.com/) ⨯ [Daybook](https://www.etsy.com/listing/1786005009/remarkable-2-planner-templates-daybook)
 
-| Month Page | Month Inbox Page | Day Page |
-| ---------- | ---------------- | -------- |
-| ![Month Page](.github/images/alpha_month_page.png) | ![Month Inbox Page](.github/images/alpha_month_inbox_page.png) | ![Day Page](.github/images/alpha_day_page.png) |
+| Year Page | Month Page | Month Inbox Page | Day Page |
+| --------- | ---------- | ---------------- | -------- |
+| ![Year Page](.github/images/alpha_year_page.png) | ![Month Page](.github/images/alpha_month_page.png) | ![Month Inbox Page](.github/images/alpha_month_inbox_page.png) | ![Day Page](.github/images/alpha_day_page.png) |
 
 | Notes Sections | Notes Subsections | Note Page |
 | ---------- | ---------------- | -------- |
