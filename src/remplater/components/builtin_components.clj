@@ -51,8 +51,9 @@
 (defmethod r/render :circle
   [_ {:as attrs
       :keys [radius stroke fill]
-      :or {fill {}
-           stroke nil}} & children]
+      :or {fill nil
+           stroke nil
+           radius 10}} & children]
   (let [cs r/*cs*
         {:keys [x y]} (pos/rect->center attrs)]
     (when fill
