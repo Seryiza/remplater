@@ -28,6 +28,9 @@
 (defn get-day-page-name [date]
   (str "day-page-" (t/format dt/fmt-yyyy date) "-" (t/format dt/fmt-mm date) "-" (t/format dt/fmt-dd date)))
 
+(defn get-additional-day-page-name [date page-index]
+  (str "day-page-" (t/format dt/fmt-yyyy date) "-" (t/format dt/fmt-mm date) "-" (t/format dt/fmt-dd date) "-" page-index))
+
 (defn get-notes-sections-page-name [date]
   (str "notes-index-page-" (t/format dt/fmt-yyyy date)))
 
@@ -138,12 +141,15 @@
 
 (def timeline-pattern
   (merge line-pattern
-    {:line (fn [{:keys [row-index rows]}]
+    {:line (fn [{:keys [start-hour empty-hours row-index rows]}]
              (let [rows-count (count rows)
                    hour? (and (odd? row-index)
-                           (<= 1 row-index)
-                           (<= row-index (- rows-count 2)))
-                   hour (+ 9 (/ (inc row-index) 2))]
+                           (<= empty-hours row-index)
+                           (<= row-index (- rows-count empty-hours 2)))
+                   hour (+ (dec start-hour)
+                          (/
+                            (- (inc row-index) empty-hours)
+                            2))]
                [:div
                 [light-line {}]
                 (when hour?
@@ -216,8 +222,26 @@
        [:div
         (:bottom-right attrs)]]]]))
 
-(defn day-page [{:as attrs :keys [date]}]
-  [:page {:name (get-day-page-name date)}
+(defn indicator-layout [{:as attrs :keys [total-pages current-page]} & children]
+  (let [radius 6
+        stroke-attrs {:radius radius
+                      :stroke {:width 2}}
+        fill-attrs {:radius (+ 1 radius)
+                    :fill {:color (pdf/make-color 0 0 0)}}]
+    [:split {:direction :y :splits [(* line-pattern-rows line-pattern-height)]}
+     (into [:div] children)
+     [:div
+      [:padding {:padding "45%"}
+       [:split {:direction :x :splits ["50%"]}
+        [:padding {:padding 5}
+         [:circle (if (= 1 current-page) fill-attrs stroke-attrs)]]
+        [:padding {:padding 5}
+         [:circle (if (= 2 current-page) fill-attrs stroke-attrs)]]]]]]))
+
+(defn day-page [{:as attrs :keys [start-hour date main-page?]}]
+  [:page {:name (if main-page?
+                  (get-day-page-name date)
+                  (get-additional-day-page-name date 1))}
    [page-layout
     {:top-left-title
      [:text {:text (t/format dt/fmt-dd date)
@@ -258,11 +282,14 @@
 
      :bottom-left
      [:pattern-grid {:pattern timeline-pattern
+                     :start-hour start-hour
+                     :empty-hours 2
                      :vertical-align :top}]
 
      :bottom-right
-     [:pattern-grid {:pattern timegrid-pattern
-                     :vertical-align :top}]}]])
+     [indicator-layout {:total-pages 2 :current-page (if main-page? 2 1)}
+      [:pattern-grid {:pattern timegrid-pattern
+                      :vertical-align :top}]]}]])
 
 (defn month-index-page [{:keys [date]}]
   [:page {:name (get-month-inbox-page-name date)}
@@ -539,8 +566,9 @@
         [notes-page {:date from-date :letter letter :number number}])
 
       (->> (dt/range-dates from-date to-date (t/of-days 1))
-        (mapv (fn [date]
-                [day-page {:date date}]))))))
+        (mapcat (fn [date]
+                  [[day-page {:date date :start-hour 0 :main-page? false}]
+                   [day-page {:date date :start-hour 11 :main-page? true}]]))))))
 
 (comment
   (render/render-document
