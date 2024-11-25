@@ -7,19 +7,21 @@
     [remplater.pdf :as pdf]
     [tick.core :as t]))
 
+(def color-black (pdf/make-color 0 0 0))
+(def color-gray (pdf/make-color 100 100 100))
+(def color-white (pdf/make-color 255 255 255))
+
 (def cells-pattern
   {:width 45
    :height 45
-   :line (fn [{:keys [col-index row-index]}]
-           (if (= 1 col-index)
-             [:line {:color (pdf/make-color 0 0 0)
-                     :width 4}]
-             [:line {:color (pdf/make-color 100 100 100)}]))
-   :outline [:line {:color (pdf/make-color 100 100 100)}]
-   :row (fn [{:as fig :keys [timeline-labels row-index rows]}]
+   :outline [:line {:color color-gray}]
+   :line (fn [{:keys [col-index]}]
+           (let [separator-col? (= 1 col-index)]
+             [:line {:color (if separator-col? color-black color-gray)
+                     :width (if separator-col? 4 1)}]))
+   :row (fn [{:keys [timeline-labels row-index rows]}]
           (when-let [label (get timeline-labels row-index)]
-            [:join {:joins [(get rows row-index)
-                            (get rows (inc row-index))]}
+            [:join {:joins (->> rows (drop row-index) (take 2))}
              [:split {:direction :x :splits [(* 2 (:width cells-pattern))]}
               [:text {:text label
                       :font-size 40
@@ -28,7 +30,7 @@
                       :text-offset 10
                       :children-offset 0}
                [:padding {:padding -5}
-                [:rect {:fill {:color (pdf/make-color 255 255 255)}}]]]]]))})
+                [:rect {:fill {:color color-white}}]]]]]))})
 
 (defn get-montly-page-name [date]
   (let [{:keys [year month]} (dt/date->units date)]
